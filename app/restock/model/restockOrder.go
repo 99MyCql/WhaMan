@@ -7,7 +7,7 @@ import (
 )
 
 type RestockOrder struct {
-	ID            string    `gorm:"primarykey;type:varchar(100);"` // 订单号
+	ID            string    `gorm:"primarykey;type:varchar(100);"` // 订单号(日期-供应商-型号-编号)
 	Date          time.Time `gorm:"not null"`                      // 日期
 	Model         string    `gorm:"not null;type:varchar(100);"`   // 型号
 	Specification string    `gorm:"not null;type:varchar(100);"`   // 规格
