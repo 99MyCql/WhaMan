@@ -3,27 +3,27 @@ package controller
 import (
 	"net/http"
 
-	"WhaMan/app/customer/model"
-	"WhaMan/app/customer/service"
-	"WhaMan/app/customer/service/impl"
+	"WhaMan/app/supplier/model"
+	"WhaMan/app/supplier/service"
+	"WhaMan/app/supplier/service/impl"
 	"WhaMan/pkg/global"
 	"WhaMan/pkg/rsp"
 
 	"github.com/gin-gonic/gin"
 )
 
-var customerService service.Customer = new(impl.CustomerImpl)
+var supplierService service.Supplier = new(impl.Supplier)
 
 // @Summary Create
-// @Tags Customer
+// @Tags Supplier
 // @Accept json
-// @Param customerInfo body model.CustomerInfo true "customerInfo"
+// @Param supplierInfo body model.SupplierInfo true "supplierInfo"
 // @Success 200 {string} json "{"code":0,"data":{},"msg":""}"
 // @Failure 200 {string} json "{"code":非0,"data":{},"msg":""}"
-// @Router /customer/create [post]
+// @Router /supplier/create [post]
 func Create(c *gin.Context) {
 	// 定义请求数据结构
-	var req *model.CustomerInfo
+	var req *model.SupplierInfo
 	// 解析请求数据
 	if err := c.ShouldBind(&req); err != nil {
 		global.Log.Error(err)
@@ -32,7 +32,7 @@ func Create(c *gin.Context) {
 	}
 	global.Log.Debug(req)
 
-	err := customerService.Create(req)
+	err := supplierService.Create(req)
 	if err != nil {
 		global.Log.Errorf("%+v", err)
 		c.JSON(http.StatusOK, rsp.Err(rsp.CreateFailed))

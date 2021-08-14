@@ -10,7 +10,7 @@ import (
 )
 
 type Stock struct {
-	ID              string  `gorm:"primarykey;type:varchar(100);"` // 库存号
+	ID              string  `gorm:"primarykey;type:varchar(100);"` // 库存号(库存号=进货订单号)
 	Model           string  `gorm:"not null;type:varchar(100);"`   // 型号
 	Specification   string  `gorm:"not null;type:varchar(100);"`   // 规格
 	RestockQuantity float64 `gorm:"not null"`                      // 进货数量
@@ -23,7 +23,7 @@ type Stock struct {
 	Note            string  `gorm:"type:text"`                     // 备注
 	CreatedAt       time.Time
 	UpdatedAt       time.Time
-	DeletedAt       gorm.DeletedAt               `gorm:"index"`
-	RestockOrders   []*restockModel.RestockOrder `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
-	SellOrders      []*sellModel.SellOrder       `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
+	DeletedAt       gorm.DeletedAt             `gorm:"index"`
+	RestockOrder    *restockModel.RestockOrder `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
+	SellOrders      []*sellModel.SellOrder     `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
 }

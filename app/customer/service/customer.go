@@ -6,10 +6,10 @@ import (
 )
 
 type Customer interface {
-	Create(customer *model.Customer) error
+	Create(i *model.CustomerInfo) error
 	Find(name string) (*model.Customer, error)
 	List() ([]*model.Customer, error)
 	ListSellOrders(name string) ([]*sellModel.SellOrder, error)
-	Update(customer *model.Customer) error
+	Update(i *model.CustomerInfo) error
 	Delete(name string) error
 }
