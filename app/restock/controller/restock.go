@@ -32,7 +32,7 @@ func Restock(c *gin.Context) {
 		c.JSON(http.StatusOK, rsp.Err(rsp.ParamError))
 		return
 	}
-	global.Log.Debug(req)
+	global.Log.Debugf("%+v", req)
 
 	// 将string格式的时间转换为time.Time格式的时间
 	var err error

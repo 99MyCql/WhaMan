@@ -6,13 +6,13 @@ import "time"
 type RestockInfo struct {
 	DateStr       string    `json:"date" binding:"required,excludes= "` // 日期(字符串形式)
 	Date          time.Time `binding:"-"`                               // 日期
-	Model         string    `binding:"required,excludes= "`             // 型号
+	ModelNum      string    `binding:"required,excludes= "`             // 型号
 	Specification string    `binding:"required,excludes= "`             // 规格
 	Quantity      float64   `binding:"required"`                        // 数量
-	Unit          string    `binding:"required,excludes= "`             // 单位
+	Unit          string    `binding:"excludes= "`                      // 单位
 	UnitPrice     float64   `binding:"required"`                        // 单价
 	SumMoney      float64   `binding:"required"`                        // 金额
-	SupplierName  string    `binding:"required,excludes= "`             // 供应商(外键)
+	SupplierID    uint      `binding:"required"`                        // 供应商(外键)
 	PaidMoney     float64   `binding:"required"`                        // 已付金额
 	PayMethod     string    `binding:"excludes= "`                      // 付款方式
 	Note          string    `binding:"excludes= "`                      // 备注
