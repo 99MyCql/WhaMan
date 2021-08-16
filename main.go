@@ -65,10 +65,10 @@ func main() {
 	customer := r.Group("/customer")
 	{
 		customer.POST("/create", customerController.Create)
-		customer.GET("/get")
-		customer.POST("/list")
-		customer.POST("/update")
-		customer.GET("/delete")
+		customer.GET("/get/:id", customerController.Get)
+		customer.POST("/list", customerController.List)
+		customer.POST("/update/:id", customerController.Update)
+		customer.GET("/delete/:id", customerController.Delete)
 	}
 	supplier := r.Group("/supplier")
 	{

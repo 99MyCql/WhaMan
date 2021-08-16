@@ -1,5 +1,10 @@
 package rsp
 
+import (
+	"fmt"
+	"time"
+)
+
 type Response struct {
 	Code int         `json:"code"`
 	Msg  string      `json:"msg"`
@@ -24,14 +29,15 @@ func SucWithData(data interface{}) Response {
 func Err(code int) Response {
 	return Response{
 		Code: code,
-		Msg:  codeMsgMap[code],
+		Msg: fmt.Sprintf("[%d][%s][%s]", code, codeMsgMap[code],
+			time.Now().Format("2006-01-02 15:04:05")),
 	}
 }
 
-func ErrWithData(code int, data interface{}) Response {
+func ErrWithMsg(code int, msg string) Response {
 	return Response{
 		Code: code,
-		Msg:  codeMsgMap[code],
-		Data: data,
+		Msg: fmt.Sprintf("[%d][%s][%s] %s", code, codeMsgMap[code],
+			time.Now().Format("2006-01-02 15:04:05"), msg),
 	}
 }

@@ -9,6 +9,10 @@ const (
 
 	// 5XXXXX 服务的错误
 	CreateFailed = 500001
+	GetFailed    = 500002
+	ListFailed   = 500003
+	UpdateFailed = 500004
+	DeleteFailed = 500005
 )
 
 var codeMsgMap = map[int]string{
@@ -16,4 +20,8 @@ var codeMsgMap = map[int]string{
 	0:      "成功",
 	400001: "参数错误",
 	500001: "创建失败",
+	500002: "查询失败",
+	500003: "获取列表失败",
+	500004: "更新失败",
+	500005: "删除失败",
 }
