@@ -73,10 +73,10 @@ func main() {
 	supplier := r.Group("/supplier")
 	{
 		supplier.POST("/create", supplierController.Create)
-		supplier.GET("/get")
-		supplier.POST("/list")
-		supplier.POST("/update")
-		supplier.GET("/delete")
+		supplier.GET("/get/:id", supplierController.Get)
+		supplier.POST("/list", supplierController.List)
+		supplier.POST("/update/:id", supplierController.Update)
+		supplier.GET("/delete/:id", supplierController.Delete)
 	}
 
 	r.Run(global.Conf.Host + ":" + global.Conf.Port)

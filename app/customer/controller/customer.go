@@ -144,7 +144,7 @@ func Delete(c *gin.Context) {
 
 	if err := customerService.Delete(uint(id)); err != nil {
 		global.Log.Errorf("%+v", err)
-		c.JSON(http.StatusOK, rsp.Err(rsp.UpdateFailed))
+		c.JSON(http.StatusOK, rsp.Err(rsp.DeleteFailed))
 		return
 	}
 

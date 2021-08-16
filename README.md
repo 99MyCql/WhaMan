@@ -9,8 +9,14 @@
 1. 生成 swagger 文档：
 
 ```cmd
-go get -u github.com/swaggo/swag/cmd/swag
+// go get -u github.com/swaggo/swag/cmd/swag
 swag init
+```
+
+2. 运行
+
+```cmd
+go run main.go
 ```
 
 ## Design

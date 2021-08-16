@@ -48,7 +48,7 @@ func (CustomerImpl) List() ([]*model.Customer, error) {
 	return customers, nil
 }
 
-// Update 1.检查更新权限；2.检查更新后的客户是否已经存在(未更新不检查)；3.更新
+// Update 1.检查更新权限；2.检查更新后的客户名称是否已经存在(未更新不检查)；3.更新
 func (c *CustomerImpl) Update(id uint, customer *model.Customer) error {
 	// TODO: 检查是否具有更新该id对应记录的权限
 
