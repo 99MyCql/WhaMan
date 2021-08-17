@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"WhaMan/app/customer/model"
 	"WhaMan/app/customer/service"
 	"WhaMan/app/customer/service/impl"
 	"WhaMan/pkg/global"
@@ -18,21 +19,21 @@ var customerService service.Customer = new(impl.CustomerImpl)
 // @Summary Create
 // @Tags Customer
 // @Accept json
-// @Param reqData body reqData true "客户信息"
+// @Param data body model.Params true "客户信息"
 // @Success 200 {string} json "{"code":0,"data":{},"msg":""}"
 // @Failure 200 {string} json "{"code":非0,"data":{},"msg":""}"
 // @Router /customer/create [post]
 func Create(c *gin.Context) {
 	// 解析请求数据
-	var req *reqData
+	var req *model.Params
 	if err := c.ShouldBind(&req); err != nil {
 		global.Log.Error(err)
 		c.JSON(http.StatusOK, rsp.ErrWithMsg(rsp.ParamError, err.Error()))
 		return
 	}
-	global.Log.Debug(req)
+	global.Log.Debugf("%+v", req)
 
-	if err := customerService.Create(req.genCustomer()); err != nil {
+	if err := customerService.Create(req); err != nil {
 		if errors.Is(err, global.ErrNameExist) {
 			c.JSON(http.StatusOK, rsp.ErrWithMsg(rsp.CreateFailed, "客户名称已存在"))
 			return
@@ -92,7 +93,7 @@ func List(c *gin.Context) {
 // @Tags Customer
 // @Accept json
 // @Param id path uint true "id"
-// @Param reqData body reqData true "客户信息"
+// @Param data body model.Params true "客户信息"
 // @Success 200 {string} json "{"code":0,"data":{},"msg":""}"
 // @Failure 200 {string} json "{"code":非0,"data":{},"msg":""}"
 // @Router /customer/update/{id} [post]
@@ -105,15 +106,15 @@ func Update(c *gin.Context) {
 		return
 	}
 	global.Log.Debug(id)
-	var req *reqData
+	var req *model.Params
 	if err := c.ShouldBind(&req); err != nil {
 		global.Log.Error(err)
 		c.JSON(http.StatusOK, rsp.ErrWithMsg(rsp.ParamError, err.Error()))
 		return
 	}
-	global.Log.Debug(req)
+	global.Log.Debugf("%+v", req)
 
-	if err := customerService.Update(uint(id), req.genCustomer()); err != nil {
+	if err := customerService.Update(uint(id), req); err != nil {
 		if errors.Is(err, global.ErrNameExist) {
 			c.JSON(http.StatusOK, rsp.ErrWithMsg(rsp.UpdateFailed, "客户名称已存在"))
 			return

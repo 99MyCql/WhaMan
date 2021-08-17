@@ -5,10 +5,9 @@ import (
 )
 
 type Customer interface {
-	Create(i *model.Customer) error
+	Create(*model.Params) error
 	Find(id uint) (*model.Customer, error)
 	List() ([]*model.Customer, error)
-	Update(id uint, i *model.Customer) error
+	Update(id uint, p *model.Params) error
 	Delete(id uint) error
-	// FindByName(name string) (*model.Customer, error)
 }

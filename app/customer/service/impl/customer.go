@@ -13,9 +13,9 @@ type CustomerImpl struct {
 }
 
 // Create 1.检查名称是否存在；2.创建客户
-func (c *CustomerImpl) Create(customer *model.Customer) error {
+func (c *CustomerImpl) Create(p *model.Params) error {
 	// 检查客户名称是否已经存在
-	_, err := c.FindByName(customer.Name)
+	_, err := c.FindByName(p.Name)
 	if err == nil {
 		// 未返回错误，说明通过名称查询到客户，进而说明名称已存在
 		return global.ErrNameExist
@@ -24,8 +24,8 @@ func (c *CustomerImpl) Create(customer *model.Customer) error {
 		return err
 	}
 
-	if err := global.DB.Create(customer).Error; err != nil {
-		return errors.Wrapf(err, "创建客户失败：%+v", customer)
+	if err := global.DB.Create(p.GenCustomer()).Error; err != nil {
+		return errors.Wrapf(err, "创建客户失败：%+v", p)
 	}
 	return nil
 }
@@ -49,11 +49,11 @@ func (CustomerImpl) List() ([]*model.Customer, error) {
 }
 
 // Update 1.检查更新权限；2.检查更新后的客户名称是否已经存在(未更新不检查)；3.更新
-func (c *CustomerImpl) Update(id uint, customer *model.Customer) error {
+func (c *CustomerImpl) Update(id uint, p *model.Params) error {
 	// TODO: 检查是否具有更新该id对应记录的权限
 
 	// 检查客户名是否已经存在
-	anotherCustomer, err := c.FindByName(customer.Name)
+	anotherCustomer, err := c.FindByName(p.Name)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		// 查询过程报错，且错误不是记录未找到，则说明查询过程中出现了其它错误
 		return err
@@ -62,8 +62,8 @@ func (c *CustomerImpl) Update(id uint, customer *model.Customer) error {
 		return global.ErrNameExist
 	}
 
-	if err := global.DB.Where("id = ?", id).Updates(customer).Error; err != nil {
-		return errors.Wrapf(err, "更新客户信息失败：%d-%+v", id, customer)
+	if err := global.DB.Where("id = ?", id).Updates(p.GenCustomer()).Error; err != nil {
+		return errors.Wrapf(err, "更新客户信息失败：%d-%+v", id, p)
 	}
 	return nil
 }
@@ -72,7 +72,7 @@ func (c *CustomerImpl) Update(id uint, customer *model.Customer) error {
 func (CustomerImpl) Delete(id uint) error {
 	// TODO: 检查是否具有删除该id对应记录的权限
 
-	if err := global.DB.Delete(&model.Customer{}, id).Error; err != nil {
+	if err := global.DB.Unscoped().Delete(&model.Customer{}, id).Error; err != nil {
 		return errors.Wrapf(err, "删除客户失败：%d", id)
 	}
 	return nil
