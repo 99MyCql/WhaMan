@@ -76,7 +76,6 @@ func GenStock(i *restockModel.RestockInfo) *stockModel.Stock {
 		RestockQuantity: i.Quantity,
 		SellQuantity:    0,
 		CurQuantity:     i.Quantity,
-		Unit:            i.Unit,
 		UnitPrice:       i.UnitPrice,
 		SumMoney:        i.SumMoney,
 		Location:        i.Location,

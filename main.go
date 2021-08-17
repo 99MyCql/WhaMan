@@ -3,6 +3,7 @@ package main
 import (
 	customerController "WhaMan/app/customer/controller"
 	restockController "WhaMan/app/restock/controller"
+	stockController "WhaMan/app/stock/controller"
 	supplierController "WhaMan/app/supplier/controller"
 	_ "WhaMan/docs"
 	"WhaMan/pkg/config"
@@ -57,10 +58,10 @@ func main() {
 	}
 	stock := r.Group("/stock")
 	{
-		stock.GET("/get")
-		stock.POST("/list")
-		stock.POST("/update")
-		stock.GET("/delete")
+		stock.GET("/get/:id", stockController.Get)
+		stock.POST("/list", stockController.List)
+		stock.POST("/update/:id", stockController.Update)
+		stock.GET("/delete/:id", stockController.Delete)
 	}
 	customer := r.Group("/customer")
 	{
