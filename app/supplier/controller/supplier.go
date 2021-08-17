@@ -34,9 +34,12 @@ func Create(c *gin.Context) {
 	}
 	global.Log.Debugf("%+v", req)
 
-	err := supplierService.Create(req)
-	if err != nil {
+	if err := supplierService.Create(req); err != nil {
 		global.Log.Errorf("%+v", err)
+		if errors.Is(err, global.ErrNameExist) {
+			c.JSON(http.StatusOK, rsp.ErrWithMsg(rsp.UpdateFailed, "供应商名称已存在"))
+			return
+		}
 		c.JSON(http.StatusOK, rsp.Err(rsp.CreateFailed))
 		return
 	}
@@ -113,11 +116,11 @@ func Update(c *gin.Context) {
 	global.Log.Debugf("%+v", req)
 
 	if err := supplierService.Update(uint(id), req); err != nil {
+		global.Log.Errorf("%+v", err)
 		if errors.Is(err, global.ErrNameExist) {
-			c.JSON(http.StatusOK, rsp.ErrWithMsg(rsp.UpdateFailed, "客户名称已存在"))
+			c.JSON(http.StatusOK, rsp.ErrWithMsg(rsp.UpdateFailed, "供应商名称已存在"))
 			return
 		}
-		global.Log.Errorf("%+v", err)
 		c.JSON(http.StatusOK, rsp.Err(rsp.UpdateFailed))
 		return
 	}
@@ -143,6 +146,10 @@ func Delete(c *gin.Context) {
 
 	if err := supplierService.Delete(uint(id)); err != nil {
 		global.Log.Errorf("%+v", err)
+		if errors.Is(err, global.ErrCannotDelete) {
+			c.JSON(http.StatusOK, rsp.ErrWithMsg(rsp.DeleteFailed, "与该供应商存在交易订单，不能删除"))
+			return
+		}
 		c.JSON(http.StatusOK, rsp.Err(rsp.DeleteFailed))
 		return
 	}

@@ -34,11 +34,11 @@ func Create(c *gin.Context) {
 	global.Log.Debugf("%+v", req)
 
 	if err := customerService.Create(req); err != nil {
+		global.Log.Errorf("%+v", err)
 		if errors.Is(err, global.ErrNameExist) {
 			c.JSON(http.StatusOK, rsp.ErrWithMsg(rsp.CreateFailed, "客户名称已存在"))
 			return
 		}
-		global.Log.Errorf("%+v", err)
 		c.JSON(http.StatusOK, rsp.Err(rsp.CreateFailed))
 		return
 	}
@@ -115,11 +115,11 @@ func Update(c *gin.Context) {
 	global.Log.Debugf("%+v", req)
 
 	if err := customerService.Update(uint(id), req); err != nil {
+		global.Log.Errorf("%+v", err)
 		if errors.Is(err, global.ErrNameExist) {
 			c.JSON(http.StatusOK, rsp.ErrWithMsg(rsp.UpdateFailed, "客户名称已存在"))
 			return
 		}
-		global.Log.Errorf("%+v", err)
 		c.JSON(http.StatusOK, rsp.Err(rsp.UpdateFailed))
 		return
 	}
@@ -145,6 +145,10 @@ func Delete(c *gin.Context) {
 
 	if err := customerService.Delete(uint(id)); err != nil {
 		global.Log.Errorf("%+v", err)
+		if errors.Is(err, global.ErrCannotDelete) {
+			c.JSON(http.StatusOK, rsp.ErrWithMsg(rsp.DeleteFailed, "与该客户存在交易订单，不能删除"))
+			return
+		}
 		c.JSON(http.StatusOK, rsp.Err(rsp.DeleteFailed))
 		return
 	}
