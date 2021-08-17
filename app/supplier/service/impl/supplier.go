@@ -12,9 +12,9 @@ import (
 type Supplier struct{}
 
 // Create 1.检查名称是否存在；2.创建
-func (s *Supplier) Create(supplier *model.Supplier) error {
+func (s *Supplier) Create(p *model.Params) error {
 	// 检查名称是否已经存在
-	_, err := s.FindByName(supplier.Name)
+	_, err := s.FindByName(p.Name)
 	if err == nil {
 		// 未返回错误，说明通过名称查询到了数据，进而说明名称已存在
 		return global.ErrNameExist
@@ -23,8 +23,8 @@ func (s *Supplier) Create(supplier *model.Supplier) error {
 		return err
 	}
 
-	if err := global.DB.Create(supplier).Error; err != nil {
-		return errors.Wrapf(err, "创建供应商失败：%+v", supplier)
+	if err := global.DB.Create(p.GenSupplier()).Error; err != nil {
+		return errors.Wrapf(err, "创建供应商失败：%+v", p)
 	}
 	return nil
 }
@@ -38,6 +38,7 @@ func (Supplier) Find(id uint) (*model.Supplier, error) {
 	return supplier, nil
 }
 
+// List 获取列表
 func (Supplier) List() ([]*model.Supplier, error) {
 	var suppliers []*model.Supplier
 	if err := global.DB.Find(&suppliers).Error; err != nil {
@@ -47,11 +48,11 @@ func (Supplier) List() ([]*model.Supplier, error) {
 }
 
 // Update 1.检查更新权限；2.检查更新后的名称是否已经存在(未更新不检查)；3.更新
-func (s *Supplier) Update(id uint, supplier *model.Supplier) error {
+func (s *Supplier) Update(id uint, p *model.Params) error {
 	// TODO: 检查是否具有更新该id对应记录的权限
 
 	// 检查客户名是否已经存在
-	anotherSupplier, err := s.FindByName(supplier.Name)
+	anotherSupplier, err := s.FindByName(p.Name)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		// 查询过程报错，且错误不是记录未找到，则说明查询过程中出现了其它错误
 		return err
@@ -60,8 +61,8 @@ func (s *Supplier) Update(id uint, supplier *model.Supplier) error {
 		return global.ErrNameExist
 	}
 
-	if err := global.DB.Where("id = ?", id).Updates(supplier).Error; err != nil {
-		return errors.Wrapf(err, "更新供应商信息失败：%d-%+v", id, supplier)
+	if err := global.DB.Where("id = ?", id).Updates(p.GenSupplier()).Error; err != nil {
+		return errors.Wrapf(err, "更新供应商信息失败：%d-%+v", id, p)
 	}
 	return nil
 }
@@ -70,7 +71,7 @@ func (s *Supplier) Update(id uint, supplier *model.Supplier) error {
 func (Supplier) Delete(id uint) error {
 	// TODO: 检查是否具有删除该id对应记录的权限
 
-	if err := global.DB.Delete(&model.Supplier{}, id).Error; err != nil {
+	if err := global.DB.Unscoped().Delete(&model.Supplier{}, id).Error; err != nil {
 		return errors.Wrapf(err, "删除供应商失败：%d", id)
 	}
 	return nil

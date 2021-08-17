@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"WhaMan/app/supplier/model"
 	"WhaMan/app/supplier/service"
 	"WhaMan/app/supplier/service/impl"
 	"WhaMan/pkg/global"
@@ -19,21 +20,21 @@ var supplierService service.Supplier = new(impl.Supplier)
 // @Summary Create
 // @Tags Supplier
 // @Accept json
-// @Param reqData body reqData true "供应商信息"
+// @Param data body model.Params true "供应商信息"
 // @Success 200 {string} json "{"code":0,"data":{},"msg":""}"
 // @Failure 200 {string} json "{"code":非0,"data":{},"msg":""}"
 // @Router /supplier/create [post]
 func Create(c *gin.Context) {
 	// 解析请求数据
-	var req *reqData
+	var req *model.Params
 	if err := c.ShouldBind(&req); err != nil {
 		global.Log.Error(err)
 		c.JSON(http.StatusOK, rsp.ErrWithMsg(rsp.ParamError, err.Error()))
 		return
 	}
-	global.Log.Debug(req)
+	global.Log.Debugf("%+v", req)
 
-	err := supplierService.Create(req.genSupplier())
+	err := supplierService.Create(req)
 	if err != nil {
 		global.Log.Errorf("%+v", err)
 		c.JSON(http.StatusOK, rsp.Err(rsp.CreateFailed))
@@ -90,7 +91,7 @@ func List(c *gin.Context) {
 // @Tags Supplier
 // @Accept json
 // @Param id path uint true "id"
-// @Param reqData body reqData true "供应商信息"
+// @Param data body model.Params true "供应商信息"
 // @Success 200 {string} json "{"code":0,"data":{},"msg":""}"
 // @Failure 200 {string} json "{"code":非0,"data":{},"msg":""}"
 // @Router /supplier/update/{id} [post]
@@ -103,15 +104,15 @@ func Update(c *gin.Context) {
 		return
 	}
 	global.Log.Debug(id)
-	var req *reqData
+	var req *model.Params
 	if err := c.ShouldBind(&req); err != nil {
 		global.Log.Error(err)
 		c.JSON(http.StatusOK, rsp.ErrWithMsg(rsp.ParamError, err.Error()))
 		return
 	}
-	global.Log.Debug(req)
+	global.Log.Debugf("%+v", req)
 
-	if err := supplierService.Update(uint(id), req.genSupplier()); err != nil {
+	if err := supplierService.Update(uint(id), req); err != nil {
 		if errors.Is(err, global.ErrNameExist) {
 			c.JSON(http.StatusOK, rsp.ErrWithMsg(rsp.UpdateFailed, "客户名称已存在"))
 			return
