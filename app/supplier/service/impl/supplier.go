@@ -9,10 +9,10 @@ import (
 	"github.com/pkg/errors"
 )
 
-type Supplier struct{}
+type SupplierImpl struct{}
 
 // Create 1.检查名称是否存在；2.创建
-func (s *Supplier) Create(p *model.Params) error {
+func (s *SupplierImpl) Create(p *model.Params) error {
 	// 检查名称是否已经存在
 	_, err := s.FindByName(p.Name)
 	if err == nil {
@@ -30,7 +30,7 @@ func (s *Supplier) Create(p *model.Params) error {
 }
 
 // Find 查找
-func (Supplier) Find(id uint) (*model.Supplier, error) {
+func (SupplierImpl) Find(id uint) (*model.Supplier, error) {
 	var supplier *model.Supplier
 	if err := global.DB.First(&supplier, id).Error; err != nil {
 		return nil, errors.Wrapf(err, "通过ID查询供应商出错：%d", id)
@@ -39,7 +39,7 @@ func (Supplier) Find(id uint) (*model.Supplier, error) {
 }
 
 // List 获取列表
-func (Supplier) List() ([]*model.Supplier, error) {
+func (SupplierImpl) List() ([]*model.Supplier, error) {
 	var suppliers []*model.Supplier
 	if err := global.DB.Find(&suppliers).Error; err != nil {
 		return nil, errors.Wrapf(err, "查询供应商列表出错")
@@ -47,10 +47,8 @@ func (Supplier) List() ([]*model.Supplier, error) {
 	return suppliers, nil
 }
 
-// Update 1.检查更新权限；2.检查更新后的名称是否已经存在(未更新不检查)；3.更新
-func (s *Supplier) Update(id uint, p *model.Params) error {
-	// TODO: 检查是否具有更新该id对应记录的权限
-
+// Update 1.检查更新后的名称是否已经存在(未更新不检查)；2.更新
+func (s *SupplierImpl) Update(id uint, p *model.Params) error {
 	// 检查客户名是否已经存在
 	anotherSupplier, err := s.FindByName(p.Name)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
@@ -67,10 +65,8 @@ func (s *Supplier) Update(id uint, p *model.Params) error {
 	return nil
 }
 
-// Delete 1.检查删除权限；2.交易额不为零不能删除；3.删除
-func (s *Supplier) Delete(id uint) error {
-	// TODO: 检查是否具有删除该id对应记录的权限
-
+// Delete 1.交易额不为零不能删除；2.删除
+func (s *SupplierImpl) Delete(id uint) error {
 	// 交易额不为零不能删除
 	supplier, err := s.Find(id)
 	if err != nil {
@@ -86,7 +82,7 @@ func (s *Supplier) Delete(id uint) error {
 	return nil
 }
 
-func (Supplier) FindByName(name string) (*model.Supplier, error) {
+func (SupplierImpl) FindByName(name string) (*model.Supplier, error) {
 	var supplier *model.Supplier
 	if err := global.DB.Where("name = ?", name).First(&supplier).Error; err != nil {
 		return nil, errors.Wrapf(err, "通过名称查询供应商时出错：%s", name)

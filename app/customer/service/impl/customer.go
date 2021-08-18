@@ -48,10 +48,8 @@ func (CustomerImpl) List() ([]*model.Customer, error) {
 	return customers, nil
 }
 
-// Update 1.检查更新权限；2.检查更新后的客户名称是否已经存在(未更新不检查)；3.更新
+// Update 1.检查更新后的客户名称是否已经存在(未更新不检查)；2.更新
 func (c *CustomerImpl) Update(id uint, p *model.Params) error {
-	// TODO: 检查是否具有更新该id对应记录的权限
-
 	// 检查客户名是否已经存在
 	anotherCustomer, err := c.FindByName(p.Name)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
@@ -68,10 +66,8 @@ func (c *CustomerImpl) Update(id uint, p *model.Params) error {
 	return nil
 }
 
-// Delete 1.检查删除权限；2.交易额不为零不能删除；3.删除
+// Delete 1.交易额不为零不能删除；2.删除
 func (c *CustomerImpl) Delete(id uint) error {
-	// TODO: 检查是否具有删除该id对应记录的权限
-
 	customer, err := c.Find(id)
 	if err != nil {
 		return errors.WithMessagef(err, "删除客户过程中，根据ID查询出错：%d", id)

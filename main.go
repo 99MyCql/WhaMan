@@ -10,10 +10,14 @@ import (
 	"WhaMan/pkg/database"
 	"WhaMan/pkg/global"
 	"WhaMan/pkg/log"
+	"WhaMan/pkg/validators"
 
-	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
+	"github.com/go-playground/validator/v10"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"github.com/swaggo/gin-swagger/swaggerFiles"
+
+	"github.com/gin-gonic/gin"
 )
 
 func init() {
@@ -30,23 +34,29 @@ func init() {
 func main() {
 	r := gin.Default()
 
-	r.GET("/", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "hello",
-		})
-	})
+	// 注册验证器
+	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
+		if err := v.RegisterValidation("datetime", validators.DatetimeFormat); err != nil {
+			global.Log.Fatal(err)
+		}
+	}
 
 	// 注册 swagger 路由
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	// 配置路由
+	r.GET("/", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"message": "hello",
+		})
+	})
 	restock := r.Group("/restock")
 	{
 		restock.POST("/restock", restockController.Restock)
-		restock.GET("/getRestockOrder")
-		restock.POST("/listRestockOrders")
-		restock.POST("/updateRestockOrder")
-		restock.GET("/deleteRestockOrder")
+		restock.GET("/getRestockOrder/:id", restockController.GetRestockOrder)
+		restock.POST("/listRestockOrders", restockController.ListRestockOrders)
+		restock.POST("/updateRestockOrder/:id", restockController.UpdateRestockOrder)
+		restock.GET("/deleteRestockOrder/:id", restockController.DeleteRestockOrder)
 	}
 	sell := r.Group("/sell")
 	{
@@ -61,7 +71,6 @@ func main() {
 		stock.GET("/get/:id", stockController.Get)
 		stock.POST("/list", stockController.List)
 		stock.POST("/update/:id", stockController.Update)
-		stock.GET("/delete/:id", stockController.Delete)
 	}
 	customer := r.Group("/customer")
 	{

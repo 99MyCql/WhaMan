@@ -104,24 +104,24 @@ func Update(c *gin.Context) {
 // @Success 200 {string} json "{"code":0,"data":{},"msg":""}"
 // @Failure 200 {string} json "{"code":非0,"data":{},"msg":""}"
 // @Router /stock/delete/{id} [get]
-func Delete(c *gin.Context) {
-	// 解析请求数据
-	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil {
-		global.Log.Error(err)
-		c.JSON(http.StatusOK, rsp.ErrWithMsg(rsp.ParamError, err.Error()))
-		return
-	}
-
-	if err := stockService.Delete(uint(id)); err != nil {
-		global.Log.Errorf("%+v", err)
-		if errors.Is(err, global.ErrCannotDelete) {
-			c.JSON(http.StatusOK, rsp.ErrWithMsg(rsp.DeleteFailed, "该库存存在出货订单，不能删除"))
-			return
-		}
-		c.JSON(http.StatusOK, rsp.Err(rsp.DeleteFailed))
-		return
-	}
-
-	c.JSON(http.StatusOK, rsp.Suc())
-}
+// func Delete(c *gin.Context) {
+// 	// 解析请求数据
+// 	id, err := strconv.Atoi(c.Param("id"))
+// 	if err != nil {
+// 		global.Log.Error(err)
+// 		c.JSON(http.StatusOK, rsp.ErrWithMsg(rsp.ParamError, err.Error()))
+// 		return
+// 	}
+//
+// 	if err := stockService.Delete(uint(id)); err != nil {
+// 		global.Log.Errorf("%+v", err)
+// 		if errors.Is(err, global.ErrCannotDelete) {
+// 			c.JSON(http.StatusOK, rsp.ErrWithMsg(rsp.DeleteFailed, "该库存存在出货订单，不能删除"))
+// 			return
+// 		}
+// 		c.JSON(http.StatusOK, rsp.Err(rsp.DeleteFailed))
+// 		return
+// 	}
+//
+// 	c.JSON(http.StatusOK, rsp.Suc())
+// }

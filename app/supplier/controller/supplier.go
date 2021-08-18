@@ -15,7 +15,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var supplierService service.Supplier = new(impl.Supplier)
+var supplierService service.Supplier = new(impl.SupplierImpl)
 
 // @Summary Create
 // @Tags Supplier

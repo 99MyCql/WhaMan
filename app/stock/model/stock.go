@@ -18,7 +18,7 @@ type Stock struct {
 	SumMoney        float64                    `gorm:"not null"`                    // 金额
 	Location        string                     `gorm:"type:varchar(100);"`          // 存放地点
 	Note            string                     `gorm:"type:text"`                   // 备注
-	RestockOrder    *restockModel.RestockOrder `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	RestockOrder    *restockModel.RestockOrder `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
 	SellOrders      []*sellModel.SellOrder     `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
 	// Unit            string                     `gorm:"default:KG;type:varchar(100);"` // 单位
 }
