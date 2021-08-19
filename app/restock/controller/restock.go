@@ -30,7 +30,7 @@ func Restock(c *gin.Context) {
 	var req *model.RestockParams
 	if err := c.ShouldBind(&req); err != nil {
 		global.Log.Error(err)
-		c.JSON(http.StatusOK, rsp.Err(rsp.ParamError))
+		c.JSON(http.StatusOK, rsp.ErrWithMsg(rsp.ParamError, err.Error()))
 		return
 	}
 	global.Log.Debugf("%+v", req)
@@ -38,7 +38,7 @@ func Restock(c *gin.Context) {
 	err := restockService.Restock(req)
 	if err != nil {
 		global.Log.Errorf("%+v", err)
-		c.JSON(http.StatusOK, rsp.Err(rsp.CreateFailed))
+		c.JSON(http.StatusOK, rsp.Err(rsp.RestockFailed))
 		return
 	}
 
@@ -82,19 +82,19 @@ func ListRestockOrders(c *gin.Context) {
 	var req *model.ListOption
 	if err := c.ShouldBind(&req); err != nil {
 		global.Log.Error(err)
-		c.JSON(http.StatusOK, rsp.Err(rsp.ParamError))
+		c.JSON(http.StatusOK, rsp.ErrWithMsg(rsp.ParamError, err.Error()))
 		return
 	}
 	global.Log.Debugf("%+v", req)
 
-	restocks, err := restockService.List(req)
+	restockOrders, err := restockService.List(req)
 	if err != nil {
 		global.Log.Errorf("%+v", err)
 		c.JSON(http.StatusOK, rsp.Err(rsp.ListFailed))
 		return
 	}
 
-	c.JSON(http.StatusOK, rsp.SucWithData(restocks))
+	c.JSON(http.StatusOK, rsp.SucWithData(restockOrders))
 }
 
 // @Summary UpdateRestockOrder

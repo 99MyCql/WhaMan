@@ -19,7 +19,7 @@ var customerService service.Customer = new(impl.CustomerImpl)
 // @Summary Create
 // @Tags Customer
 // @Accept json
-// @Param data body model.Params true "客户信息"
+// @Param data body object true "客户信息"
 // @Success 200 {string} json "{"code":0,"data":{},"msg":""}"
 // @Failure 200 {string} json "{"code":非0,"data":{},"msg":""}"
 // @Router /customer/create [post]
@@ -93,7 +93,7 @@ func List(c *gin.Context) {
 // @Tags Customer
 // @Accept json
 // @Param id path uint true "id"
-// @Param data body model.Params true "客户信息"
+// @Param data body object true "客户信息"
 // @Success 200 {string} json "{"code":0,"data":{},"msg":""}"
 // @Failure 200 {string} json "{"code":非0,"data":{},"msg":""}"
 // @Router /customer/update/{id} [post]

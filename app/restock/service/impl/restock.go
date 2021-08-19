@@ -31,7 +31,7 @@ func (r *RestockImpl) Restock(p *model.RestockParams) error {
 			RestockQuantity: p.Quantity,
 			CurQuantity:     p.Quantity,
 			UnitPrice:       p.UnitPrice,
-			SumMoney:        restockOrder.SumMoney,
+			SumMoney:        p.Quantity * p.UnitPrice,
 			Location:        p.Location,
 			RestockOrder:    restockOrder,
 		}
@@ -40,8 +40,8 @@ func (r *RestockImpl) Restock(p *model.RestockParams) error {
 		}
 
 		// 更新关联的供应商信息
-		if err := r.updateSupplier(tx, p.SupplierID, restockOrder.SumMoney); err != nil {
-			return errors.WithMessagef(err, "进货流程中，更新供应商信息出错：%d", p.SupplierID)
+		if err := r.updateSupplier(tx, restockOrder.SupplierID, restockOrder.SumMoney); err != nil {
+			return errors.WithMessagef(err, "进货流程中，更新供应商信息出错：%d", restockOrder.SupplierID)
 		}
 		return nil
 	})
@@ -58,7 +58,7 @@ func (RestockImpl) Find(id uint) (*model.RestockOrder, error) {
 
 // List 查询所有进货订单，可指定查询条件和排序规则
 func (RestockImpl) List(option *model.ListOption) ([]*model.RestockOrder, error) {
-	tx := global.DB.Model(&model.RestockOrder{})
+	tx := global.DB
 	if option.Where != nil {
 		if option.Where.Date != nil {
 			tx = tx.Where("date >= ? and date < ?", option.Where.Date.StartDate, option.Where.Date.EndDate)

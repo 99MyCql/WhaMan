@@ -20,7 +20,7 @@ var supplierService service.Supplier = new(impl.SupplierImpl)
 // @Summary Create
 // @Tags Supplier
 // @Accept json
-// @Param data body model.Params true "供应商信息"
+// @Param data body object true "供应商信息"
 // @Success 200 {string} json "{"code":0,"data":{},"msg":""}"
 // @Failure 200 {string} json "{"code":非0,"data":{},"msg":""}"
 // @Router /supplier/create [post]
@@ -94,7 +94,7 @@ func List(c *gin.Context) {
 // @Tags Supplier
 // @Accept json
 // @Param id path uint true "id"
-// @Param data body model.Params true "供应商信息"
+// @Param data body object true "供应商信息"
 // @Success 200 {string} json "{"code":0,"data":{},"msg":""}"
 // @Failure 200 {string} json "{"code":非0,"data":{},"msg":""}"
 // @Router /supplier/update/{id} [post]
