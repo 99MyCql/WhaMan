@@ -7,6 +7,7 @@ import (
 	"WhaMan/app/restock/model"
 	"WhaMan/app/restock/service"
 	"WhaMan/app/restock/service/impl"
+	stockServiceImpl "WhaMan/app/stock/service/impl"
 	"WhaMan/pkg/global"
 	"WhaMan/pkg/rsp"
 
@@ -15,7 +16,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var restockService service.Restock = new(impl.RestockImpl)
+var restockService service.Restock = impl.New(new(stockServiceImpl.StockImpl))
 
 // @Summary Restock
 // @Tags Restock

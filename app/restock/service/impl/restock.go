@@ -2,8 +2,8 @@ package impl
 
 import (
 	"WhaMan/app/restock/model"
-	sellModel "WhaMan/app/sell/model"
 	stockModel "WhaMan/app/stock/model"
+	stockService "WhaMan/app/stock/service"
 	supplierModel "WhaMan/app/supplier/model"
 	"WhaMan/pkg/global"
 
@@ -12,6 +12,11 @@ import (
 )
 
 type RestockImpl struct {
+	stockService stockService.Stock
+}
+
+func New(stockService stockService.Stock) *RestockImpl {
+	return &RestockImpl{stockService: stockService}
 }
 
 // Restock 1.新增库存和进货订单；2.更新供应商信息。
@@ -19,28 +24,24 @@ func (r *RestockImpl) Restock(p *model.RestockParams) error {
 	// 执行事务：保证新增库存和进货订单、更新供应商信息等操作同时成功
 	return global.DB.Transaction(func(tx *gorm.DB) error {
 		// 新增库存和进货订单
+		restockOrder := p.GenRestockOrder()
 		stock := &stockModel.Stock{
 			ModelNum:        p.ModelNum,
 			Specification:   p.Specification,
 			RestockQuantity: p.Quantity,
 			CurQuantity:     p.Quantity,
 			UnitPrice:       p.UnitPrice,
-			SumMoney:        p.SumMoney,
+			SumMoney:        restockOrder.SumMoney,
 			Location:        p.Location,
-			RestockOrder:    p.GenRestockOrder(),
+			RestockOrder:    restockOrder,
 		}
 		if err := tx.Create(stock).Error; err != nil {
-			return errors.Wrapf(err, "进货流程中，新增库存和进货订单失败：%+v", stock)
+			return errors.Wrapf(err, "进货流程中，新增库存和进货订单出错：%+v", stock)
 		}
 
 		// 更新关联的供应商信息
-		var supplier supplierModel.Supplier
-		if err := tx.First(&supplier, "id = ?", p.SupplierID).Error; err != nil {
-			return errors.Wrapf(err, "进货流程中，获取供应商信息失败：%d", p.SupplierID)
-		}
-		supplier.Turnover += p.SumMoney
-		if err := tx.Save(supplier).Error; err != nil {
-			return errors.Wrapf(err, "进货流程中，更新供应商信息失败：%+v", supplier)
+		if err := r.updateSupplier(tx, p.SupplierID, restockOrder.SumMoney); err != nil {
+			return errors.WithMessagef(err, "进货流程中，更新供应商信息出错：%d", p.SupplierID)
 		}
 		return nil
 	})
@@ -75,25 +76,26 @@ func (RestockImpl) List(option *model.ListOption) ([]*model.RestockOrder, error)
 func (r *RestockImpl) Update(id uint, p *model.UpdateParams) error {
 	return global.DB.Transaction(func(tx *gorm.DB) error {
 		// 查询原进货订单
-		var old *model.RestockOrder
-		if err := tx.Find(&old, id).Error; err != nil {
+		var oldRO *model.RestockOrder
+		if err := tx.Find(&oldRO, id).Error; err != nil {
 			return errors.WithMessagef(err, "更新进货订单过程中，查询进货订单出错：%d", id)
 		}
 
 		// 更新进货订单
-		if err := tx.Where("id = ?", id).Updates(p.GenRestockOrder()).Error; err != nil {
-			return errors.Wrapf(err, "更新进货订单出错：%d-%+v", id, p)
+		newRO := p.GenRestockOrder()
+		if err := tx.Where("id = ?", id).Updates(newRO).Error; err != nil {
+			return errors.Wrapf(err, "更新进货订单出错：%d-%+v", id, newRO)
 		}
 
 		// 更新关联的库存
 		var stock *stockModel.Stock
-		if err := tx.First(&stock, old.StockID).Error; err != nil {
-			return errors.Wrapf(err, "更新进货订单过程中，查询库存出错：%d", old.StockID)
+		if err := tx.First(&stock, oldRO.StockID).Error; err != nil {
+			return errors.Wrapf(err, "更新进货订单过程中，查询库存出错：%d", oldRO.StockID)
 		}
-		stock.ModelNum = p.ModelNum
-		stock.Specification = p.Specification
-		stock.UnitPrice = p.UnitPrice
-		stock.RestockQuantity = p.Quantity
+		stock.ModelNum = newRO.ModelNum
+		stock.Specification = newRO.Specification
+		stock.UnitPrice = newRO.UnitPrice
+		stock.RestockQuantity = newRO.Quantity
 		stock.CurQuantity = stock.RestockQuantity - stock.SellQuantity
 		stock.SumMoney = stock.CurQuantity * stock.UnitPrice
 		if err := tx.Save(stock).Error; err != nil {
@@ -101,38 +103,24 @@ func (r *RestockImpl) Update(id uint, p *model.UpdateParams) error {
 		}
 
 		// 如果单价更新，更新关联的出货订单
-		if old.UnitPrice != p.UnitPrice {
-			var sellOrders []*sellModel.SellOrder
-			if err := tx.Where("stock_id = ?", old.StockID).Find(&sellOrders).Error; err != nil {
-				return errors.Wrapf(err, "更新进货订单过程中，查询出货订单出错：%d", old.StockID)
-			}
-			for i := 0; i < len(sellOrders); i++ {
-				sellOrders[i].Profit = sellOrders[i].Quantity*(sellOrders[i].UnitPrice-stock.UnitPrice) -
-					sellOrders[i].FreightCost - sellOrders[i].Kickback - sellOrders[i].Tax - sellOrders[i].OtherCost
-				if err := tx.Save(sellOrders[i]).Error; err != nil {
-					return errors.Wrapf(err, "更新进货订单过程中，更新出货订单出错：%+v", stock)
-				}
+		if oldRO.UnitPrice != newRO.UnitPrice {
+			if err := r.stockService.UpdateSellOrders(tx, oldRO.StockID, newRO.UnitPrice); err != nil {
+				return errors.WithMessagef(err, "更新进货订单过程中，更新库存关联的出货订单出错：%d", oldRO.SupplierID)
 			}
 		}
 
-		// 如果供应商变更，更新供应商信息
-		if old.SupplierID != p.SupplierID {
-			var oldSupplier *supplierModel.Supplier
-			if err := tx.First(&oldSupplier, old.SupplierID).Error; err != nil {
-				return errors.Wrapf(err, "更新进货订单过程中，查询原供应商出错：%d", old.SupplierID)
+		// 如果供应商变更，更新旧新供应商信息
+		if oldRO.SupplierID != newRO.SupplierID {
+			if err := r.updateSupplier(tx, oldRO.SupplierID, -oldRO.SumMoney); err != nil {
+				return errors.WithMessagef(err, "更新进货订单过程中，更新原供应商出错：%d", oldRO.SupplierID)
 			}
-			oldSupplier.Turnover = oldSupplier.Turnover - old.SumMoney
-			if err := tx.Save(oldSupplier).Error; err != nil {
-				return errors.Wrapf(err, "更新进货订单过程中，更新原供应商出错：%+v", oldSupplier)
+			if err := r.updateSupplier(tx, newRO.SupplierID, newRO.SumMoney); err != nil {
+				return errors.WithMessagef(err, "更新进货订单过程中，更新新供应商出错：%d", newRO.SupplierID)
 			}
-
-			var supplier *supplierModel.Supplier
-			if err := tx.First(&supplier, p.SupplierID).Error; err != nil {
-				return errors.Wrapf(err, "更新进货订单过程中，查询新供应商出错：%d", old.SupplierID)
-			}
-			supplier.Turnover = supplier.Turnover + p.SumMoney
-			if err := tx.Save(supplier).Error; err != nil {
-				return errors.Wrapf(err, "更新进货订单过程中，更新新供应商出错：%+v", supplier)
+		} else if oldRO.SumMoney != newRO.SumMoney {
+			// 如果总金额变更，更新供应商交易额
+			if err := r.updateSupplier(tx, newRO.SupplierID, newRO.SumMoney-oldRO.SumMoney); err != nil {
+				return errors.WithMessagef(err, "更新进货订单过程中，更新供应商出错：%d", oldRO.SupplierID)
 			}
 		}
 		return nil
@@ -166,15 +154,23 @@ func (r *RestockImpl) Delete(id uint) error {
 		}
 
 		// 更新关联的供应商
-		var supplier *supplierModel.Supplier
-		if err := tx.First(&supplier, restockOrder.SupplierID).Error; err != nil {
-			return errors.Wrapf(err, "删除进货订单过程中，查询供应商出错：%d", restockOrder.SupplierID)
-		}
-		supplier.Turnover = supplier.Turnover - restockOrder.SumMoney
-		if err := tx.Save(supplier).Error; err != nil {
-			return errors.Wrapf(err, "删除进货订单过程中，更新供应商出错：%+v", supplier)
+		if err := r.updateSupplier(tx, restockOrder.SupplierID, -restockOrder.SumMoney); err != nil {
+			return errors.WithMessagef(err, "删除进货订单过程中，更新供应商出错：%d", restockOrder.SupplierID)
 		}
 
 		return nil
 	})
+}
+
+// updateSupplier 更新关联的供应商
+func (r RestockImpl) updateSupplier(tx *gorm.DB, supplierID uint, money float64) error {
+	var supplier *supplierModel.Supplier
+	if err := tx.First(&supplier, supplierID).Error; err != nil {
+		return errors.Wrapf(err, "更新关联供应商的过程中，查询供应商出错：%d", supplierID)
+	}
+	supplier.Turnover = supplier.Turnover + money
+	if err := tx.Save(supplier).Error; err != nil {
+		return errors.Wrapf(err, "更新关联供应商的过程中，更新供应商出错：%+v", supplier)
+	}
+	return nil
 }

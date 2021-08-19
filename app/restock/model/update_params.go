@@ -7,7 +7,6 @@ type UpdateParams struct {
 	Specification string  `binding:"required"`            // 规格
 	Quantity      float64 `binding:"required,ne=0"`       // 数量
 	UnitPrice     float64 `binding:"required,ne=0"`       // 单价
-	SumMoney      float64 `binding:"required,ne=0"`       // 金额
 	PaidMoney     float64 // 已付金额
 	PayMethod     string  // 付款方式
 	Note          string  // 备注
@@ -21,7 +20,7 @@ func (p *UpdateParams) GenRestockOrder() *RestockOrder {
 		Specification: p.Specification,
 		Quantity:      p.Quantity,
 		UnitPrice:     p.UnitPrice,
-		SumMoney:      p.SumMoney,
+		SumMoney:      p.Quantity * p.UnitPrice,
 		PaidMoney:     p.PaidMoney,
 		PayMethod:     p.PayMethod,
 		Note:          p.Note,

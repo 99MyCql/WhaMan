@@ -1,8 +1,11 @@
 package impl
 
 import (
+	sellModel "WhaMan/app/sell/model"
 	"WhaMan/app/stock/model"
 	"WhaMan/pkg/global"
+
+	"gorm.io/gorm"
 
 	"github.com/pkg/errors"
 )
@@ -33,6 +36,22 @@ func (StockImpl) List() ([]*model.Stock, error) {
 func (StockImpl) Update(id uint, p *model.UpdateParams) error {
 	if err := global.DB.Where("id = ?", id).Updates(p.GenStock()).Error; err != nil {
 		return errors.Wrapf(err, "更新库存信息失败：%d-%+v", id, p)
+	}
+	return nil
+}
+
+// UpdateSellOrders 更新关联的出货订单
+func (StockImpl) UpdateSellOrders(tx *gorm.DB, id uint, unitPrice float64) error {
+	var sellOrders []*sellModel.SellOrder
+	if err := tx.Where("stock_id = ?", id).Find(&sellOrders).Error; err != nil {
+		return errors.Wrapf(err, "更新关联的出货订单过程中，查询出货订单出错：%d", id)
+	}
+	for i := 0; i < len(sellOrders); i++ {
+		sellOrders[i].Profit = sellOrders[i].Quantity*(sellOrders[i].UnitPrice-unitPrice) -
+			sellOrders[i].FreightCost - sellOrders[i].Kickback - sellOrders[i].Tax - sellOrders[i].OtherCost
+		if err := tx.Save(sellOrders[i]).Error; err != nil {
+			return errors.Wrapf(err, "更新关联的出货订单过程中，更新出货订单出错：%+v", sellOrders[i])
+		}
 	}
 	return nil
 }
