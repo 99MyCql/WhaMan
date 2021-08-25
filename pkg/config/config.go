@@ -15,6 +15,8 @@ type Conf struct {
 	Username      string `yaml:"username"`
 	Password      string `yaml:"password"`
 	SessionSecret string `yaml:"sessionSecret"`
+	SslCert       string `yaml:"sslCert"`
+	SslKey        string `yaml:"sslKey"`
 }
 
 // New 读取配置文件，获取配置数据

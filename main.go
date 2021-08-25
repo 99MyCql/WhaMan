@@ -47,6 +47,9 @@ func main() {
 		}
 	}
 
+	// 设置HTTPS
+	r.Use(middleware.TlsHandler())
+
 	// 创建基于cookie的存储引擎，参数是用于加密的密钥
 	store := cookie.NewStore([]byte(global.Conf.SessionSecret))
 	// 设置session中间件，参数指session的名字，也是cookie的名字
@@ -109,5 +112,6 @@ func main() {
 		supplier.GET("/delete/:id", supplierController.Delete)
 	}
 
-	r.Run(global.Conf.Host + ":" + global.Conf.Port)
+	// r.Run(global.Conf.Host + ":" + global.Conf.Port)
+	r.RunTLS(global.Conf.Host+":"+global.Conf.Port, global.Conf.SslCert, global.Conf.SslKey)
 }

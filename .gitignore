@@ -17,3 +17,4 @@ conf.yml
 docs/
 temp/*
 !.gitkeep
+*.pem
