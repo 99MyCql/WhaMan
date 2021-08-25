@@ -9,9 +9,12 @@ import (
 
 // Conf 配置数据实体
 type Conf struct {
-	Host     string `yaml:"host"`
-	Port     string `yaml:"port"`
-	MysqlUrl string `yaml:"mysqlUrl"`
+	Host          string `yaml:"host"`
+	Port          string `yaml:"port"`
+	MysqlUrl      string `yaml:"mysqlUrl"`
+	Username      string `yaml:"username"`
+	Password      string `yaml:"password"`
+	SessionSecret string `yaml:"sessionSecret"`
 }
 
 // New 读取配置文件，获取配置数据

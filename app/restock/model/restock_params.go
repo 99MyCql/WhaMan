@@ -24,7 +24,6 @@ func (p *RestockParams) GenRestockOrder() *RestockOrder {
 		UnitPrice:     p.UnitPrice,
 		SumMoney:      p.Quantity * p.UnitPrice,
 		SupplierID:    p.SupplierID,
-		PaidMoney:     p.PaidMoney,
 		PayMethod:     p.PayMethod,
 		Note:          p.Note,
 	}

@@ -20,5 +20,4 @@ type Stock struct {
 	Note            string                     `gorm:"type:text"`                   // 备注
 	RestockOrder    *restockModel.RestockOrder `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
 	SellOrders      []*sellModel.SellOrder     `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
-	// Unit            string                     `gorm:"default:KG;type:varchar(100);"` // 单位
 }

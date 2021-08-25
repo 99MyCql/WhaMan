@@ -12,7 +12,6 @@ type RestockOrder struct {
 	Quantity      float64 `gorm:"not null;type:varchar(100);"` // 数量
 	UnitPrice     float64 `gorm:"not null"`                    // 单价
 	SumMoney      float64 `gorm:"not null"`                    // 金额
-	PaidMoney     float64 `gorm:"not null"`                    // 已付金额
 	PayMethod     string  `gorm:"not null;type:varchar(100);"` // 付款方式
 	Note          string  `gorm:"type:text"`                   // 备注
 	StockID       uint    // 库存编号(外键)
