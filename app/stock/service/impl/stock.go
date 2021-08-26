@@ -47,7 +47,8 @@ func (StockImpl) UpdateSellOrders(tx *gorm.DB, id uint, unitPrice float64) error
 		return errors.Wrapf(err, "更新关联的出货订单过程中，查询出货订单出错：%d", id)
 	}
 	for i := 0; i < len(sellOrders); i++ {
-		sellOrders[i].CalProfit(unitPrice)
+		sellOrders[i].RestockUnitPrice = unitPrice
+		sellOrders[i].CalProfit()
 		if err := tx.Model(&sellOrders[i]).Update("profit", sellOrders[i].Profit).Error; err != nil {
 			return errors.Wrapf(err, "更新关联的出货订单过程中，更新出货订单出错：%+v", sellOrders[i])
 		}

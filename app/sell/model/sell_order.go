@@ -35,6 +35,6 @@ type SellOrder struct {
 }
 
 // CalProfit 计算利润
-func (s *SellOrder) CalProfit(restockUnitPrice float64) {
-	s.Profit = s.Quantity*(s.UnitPrice-restockUnitPrice) - s.FreightCost - s.Kickback - s.Tax - s.OtherCost
+func (s *SellOrder) CalProfit() {
+	s.Profit = s.Quantity*(s.UnitPrice-s.RestockUnitPrice) - s.FreightCost - s.Kickback - s.Tax - s.OtherCost
 }
