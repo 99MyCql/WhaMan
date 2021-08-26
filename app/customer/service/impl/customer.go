@@ -42,7 +42,7 @@ func (CustomerImpl) Find(id uint) (*model.Customer, error) {
 // List 获取客户列表
 func (CustomerImpl) List() ([]*model.Customer, error) {
 	var customers []*model.Customer
-	if err := global.DB.Find(&customers).Error; err != nil {
+	if err := global.DB.Order("name").Find(&customers).Error; err != nil {
 		return nil, errors.Wrapf(err, "查询客户列表出错")
 	}
 	return customers, nil

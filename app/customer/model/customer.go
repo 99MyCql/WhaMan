@@ -7,7 +7,7 @@ import (
 )
 
 type Customer struct {
-	gorm.Model  `binding:"-"`
+	gorm.Model
 	Name        string                 `gorm:"unique;type:varchar(100);"` // 客户名
 	Contacts    string                 `gorm:"type:varchar(100);"`        // 联系人
 	Phone       string                 `gorm:"type:varchar(100);"`        // 联系电话

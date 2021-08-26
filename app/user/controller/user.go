@@ -42,6 +42,7 @@ func Login(c *gin.Context) {
 		global.Log.Error(err)
 		if errors.Is(err, global.ErrUsernamePasswd) {
 			c.JSON(http.StatusOK, rsp.Err(rsp.UsernamePasswdError))
+			return
 		}
 		c.JSON(http.StatusOK, rsp.Err(rsp.LoginFailed))
 		return
