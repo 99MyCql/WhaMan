@@ -9,6 +9,7 @@ import (
 
 // Conf 配置数据实体
 type Conf struct {
+	Env           string `yaml:"env"`
 	Host          string `yaml:"host"`
 	Port          string `yaml:"port"`
 	MysqlUrl      string `yaml:"mysqlUrl"`

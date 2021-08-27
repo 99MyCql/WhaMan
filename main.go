@@ -17,13 +17,11 @@ import (
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
-
+	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"github.com/swaggo/gin-swagger/swaggerFiles"
-
-	"github.com/gin-gonic/gin"
 )
 
 func init() {
@@ -38,8 +36,6 @@ func init() {
 }
 
 func main() {
-	r := gin.Default()
-
 	// 注册验证器
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
 		if err := v.RegisterValidation("datetime", validators.DatetimeFormat); err != nil {
@@ -47,23 +43,21 @@ func main() {
 		}
 	}
 
+	r := gin.Default()
+
+	// 设置中间件
 	// 设置HTTPS
 	r.Use(middleware.TlsHandler())
-
-	// 创建基于cookie的存储引擎，参数是用于加密的密钥
+	// 设置基于cookie的session中间件
 	store := cookie.NewStore([]byte(global.Conf.SessionSecret))
-	// 设置session中间件，参数指session的名字，也是cookie的名字
 	r.Use(sessions.Sessions("WhaManSession", store))
 
-	// 注册 swagger 路由
-	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-
 	// 配置路由
-	r.GET("/", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "hello",
-		})
-	})
+	// debug模式下注册 swagger 路由
+	if global.Conf.Env == "debug" {
+		r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	}
+	// 业务路由
 	user := r.Group("/user")
 	{
 		user.POST("/login", userController.Login)
