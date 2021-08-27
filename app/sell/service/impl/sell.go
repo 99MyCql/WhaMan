@@ -38,6 +38,7 @@ func (s *SellImpl) Sell(p *model.Params) error {
 
 // Find 查找
 func (SellImpl) Find(id uint) (*model.SellOrder, error) {
+	// TODO: 连接查询获取客户信息和库存信息
 	var sellOrder *model.SellOrder
 	if err := global.DB.Find(&sellOrder, id).Error; err != nil {
 		return nil, errors.Wrapf(err, "通过ID查询出货订单出错：%d", id)
@@ -160,9 +161,13 @@ func (SellImpl) updateCustomer(tx *gorm.DB, customerID uint, sumMoney float64, p
 }
 
 // updateStock 更新关联的库存
-func (s SellImpl) updateStock(tx *gorm.DB, stockID uint, quantity float64) error {
+func (s SellImpl) updateStock(tx *gorm.DB, stockID *uint, quantity float64) error {
+	if stockID == nil {
+		return nil
+	}
+
 	var stock *stockModel.Stock
-	if err := tx.First(&stock, stockID).Error; err != nil {
+	if err := tx.First(&stock, *stockID).Error; err != nil {
 		return errors.Wrapf(err, "更新关联库存过程中，查询库存出错：%d", stockID)
 	}
 	stock.SellQuantity += quantity
