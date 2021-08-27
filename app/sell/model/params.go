@@ -5,6 +5,7 @@ type Params struct {
 	CustomerOrderID  string  // 客户订单号
 	CustomerBatchID  string  // 客户批号
 	DeliverOrderID   string  // 送货单号
+	ModelNum         string  // 型号
 	Specification    string  // 规格
 	Quantity         float64 // 数量
 	RestockUnitPrice float64 // 进货单价
@@ -16,7 +17,7 @@ type Params struct {
 	Tax              float64 // 税金
 	OtherCost        float64 // 杂费
 	Note             string  // 备注
-	StockID          uint    `binding:"required"` // 库存编号(外键)
+	StockID          *uint   // 库存编号(外键)
 	CustomerID       uint    `binding:"required"` // 客户编号(外键)
 }
 
@@ -26,6 +27,7 @@ func (p *Params) GenSellOrder() *SellOrder {
 		CustomerOrderID:  p.CustomerOrderID,
 		CustomerBatchID:  p.CustomerBatchID,
 		DeliverOrderID:   p.DeliverOrderID,
+		ModelNum:         p.ModelNum,
 		Specification:    p.Specification,
 		Quantity:         p.Quantity,
 		RestockUnitPrice: p.RestockUnitPrice,

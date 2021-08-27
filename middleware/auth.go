@@ -14,6 +14,7 @@ import (
 func AuthSession() func(c *gin.Context) {
 	return func(c *gin.Context) {
 		session := sessions.Default(c)
+		// TODO: 设置超时时间
 		if session.Get("isLogin") == nil {
 			global.Log.Error("未登录")
 			c.JSON(http.StatusOK, rsp.Err(rsp.NotLoginErr))
