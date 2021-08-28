@@ -18,12 +18,12 @@ var sellService service.Sell = new(impl.SellImpl)
 // @Summary Sell
 // @Tags Sell
 // @Accept json
-// @Param data body model.Params true "出货信息"
+// @Param data body model.SellParams true "出货信息"
 // @Success 200 {string} json "{"code":0,"data":{},"msg":""}"
 // @Failure 200 {string} json "{"code":非0,"data":{},"msg":""}"
 // @Router /sell/sell [post]
 func Sell(c *gin.Context) {
-	var req *model.Params
+	var req *model.SellParams
 	if err := c.ShouldBind(&req); err != nil {
 		global.Log.Error(err)
 		c.JSON(http.StatusOK, rsp.ErrWithMsg(rsp.ParamError, err.Error()))
@@ -97,7 +97,7 @@ func ListSellOrders(c *gin.Context) {
 // @Tags Sell
 // @Accept json
 // @Param id path uint true "id"
-// @Param data body model.Params true "出货订单信息"
+// @Param data body model.SellParams true "出货订单信息"
 // @Success 200 {string} json "{"code":0,"data":{},"msg":""}"
 // @Failure 200 {string} json "{"code":非0,"data":{},"msg":""}"
 // @Router /sell/updateSellOrder/{id} [post]
@@ -109,7 +109,7 @@ func UpdateRestockOrder(c *gin.Context) {
 		return
 	}
 	global.Log.Debug(id)
-	var req *model.Params
+	var req *model.SellParams
 	if err := c.ShouldBind(&req); err != nil {
 		global.Log.Error(err)
 		c.JSON(http.StatusOK, rsp.ErrWithMsg(rsp.ParamError, err.Error()))

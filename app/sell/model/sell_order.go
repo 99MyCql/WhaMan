@@ -30,7 +30,7 @@ type SellOrder struct {
 	OtherCost        float64 `json:"otherCost"`                                        // 杂费
 	Profit           float64 `json:"profit" gorm:"not null"`                           // 利润
 	Note             string  `json:"note" gorm:"type:text"`                            // 备注
-	StockID          *uint   `json:"stockID" gorm:"default:null"`                      // 库存编号(外键)
+	StockID          uint    `json:"stockID" gorm:"default:null"`                      // 库存编号(外键)
 	CustomerID       uint    `json:"customerID"`                                       // 客户编号(外键)
 }
 

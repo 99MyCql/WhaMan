@@ -1,6 +1,6 @@
 package model
 
-type Params struct {
+type SellParams struct {
 	Date             string  `binding:"required,datetime=2006-01-02"` // 日期
 	CustomerOrderID  string  // 客户订单号
 	CustomerBatchID  string  // 客户批号
@@ -17,11 +17,11 @@ type Params struct {
 	Tax              float64 // 税金
 	OtherCost        float64 // 杂费
 	Note             string  // 备注
-	StockID          *uint   // 库存编号(外键)
+	StockID          uint    // 库存编号(外键)
 	CustomerID       uint    `binding:"required"` // 客户编号(外键)
 }
 
-func (p *Params) GenSellOrder() *SellOrder {
+func (p *SellParams) GenSellOrder() *SellOrder {
 	return &SellOrder{
 		Date:             p.Date,
 		CustomerOrderID:  p.CustomerOrderID,

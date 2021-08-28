@@ -14,7 +14,7 @@ import (
 type SellImpl struct{}
 
 // Sell 1.新增出货订单；2.更新库存；3.更新客户
-func (s *SellImpl) Sell(p *model.Params) error {
+func (s *SellImpl) Sell(p *model.SellParams) error {
 	return global.DB.Transaction(func(tx *gorm.DB) error {
 		// 新增出货订单
 		sellOrder := p.GenSellOrder()
@@ -70,7 +70,7 @@ func (SellImpl) List(option *model.ListOption) ([]*model.SellOrder, error) {
 }
 
 // Update 1.更新出货订单；2.更新库存；3.更新客户
-func (s *SellImpl) Update(id uint, p *model.Params) error {
+func (s *SellImpl) Update(id uint, p *model.SellParams) error {
 	return global.DB.Transaction(func(tx *gorm.DB) error {
 		var oldSO *model.SellOrder
 		if err := tx.First(&oldSO, id).Error; err != nil {
@@ -81,8 +81,15 @@ func (s *SellImpl) Update(id uint, p *model.Params) error {
 		newSO := p.GenSellOrder()
 		newSO.Model = oldSO.Model
 		newSO.CalProfit()
-		if err := tx.Save(newSO).Error; err != nil {
-			return errors.Wrapf(err, "更新出货订单出错：%d-%+v", id, newSO)
+		// stock_id 为 0 时，Save更新数据会出错
+		if newSO.StockID == 0 {
+			if err := tx.Select("*").Omit("stock_id").Updates(newSO).Error; err != nil {
+				return errors.Wrapf(err, "更新出货订单出错：%d-%+v", id, newSO)
+			}
+		} else {
+			if err := tx.Save(newSO).Error; err != nil {
+				return errors.Wrapf(err, "更新出货订单出错：%d-%+v", id, newSO)
+			}
 		}
 
 		// 更新库存
@@ -161,13 +168,13 @@ func (SellImpl) updateCustomer(tx *gorm.DB, customerID uint, sumMoney float64, p
 }
 
 // updateStock 更新关联的库存
-func (s SellImpl) updateStock(tx *gorm.DB, stockID *uint, quantity float64) error {
-	if stockID == nil {
+func (s SellImpl) updateStock(tx *gorm.DB, stockID uint, quantity float64) error {
+	if stockID == 0 {
 		return nil
 	}
 
 	var stock *stockModel.Stock
-	if err := tx.First(&stock, *stockID).Error; err != nil {
+	if err := tx.First(&stock, stockID).Error; err != nil {
 		return errors.Wrapf(err, "更新关联库存过程中，查询库存出错：%d", stockID)
 	}
 	stock.SellQuantity += quantity
