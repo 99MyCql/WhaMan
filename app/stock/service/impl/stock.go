@@ -34,7 +34,8 @@ func (StockImpl) List() ([]*model.Stock, error) {
 // 仅更新备注、存放地点：1.更新
 // 更新数据较多时：1.更新对应的进货订单；2.更新对应的出货订单(单价)；3.重新计算当前库存和金额；4.更新库存
 func (StockImpl) Update(id uint, p *model.UpdateParams) error {
-	if err := global.DB.Where("id = ?", id).Updates(p.GenStock()).Error; err != nil {
+	err := global.DB.Where("id = ?", id).Select("location", "note").Updates(p.GenStock()).Error
+	if err != nil {
 		return errors.Wrapf(err, "更新库存信息失败：%d-%+v", id, p)
 	}
 	return nil

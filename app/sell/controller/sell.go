@@ -140,6 +140,7 @@ func DeleteSellOrder(c *gin.Context) {
 		c.JSON(http.StatusOK, rsp.ErrWithMsg(rsp.ParamError, err.Error()))
 		return
 	}
+	global.Log.Debug(id)
 
 	if err := sellService.Delete(uint(id)); err != nil {
 		global.Log.Errorf("%+v", err)

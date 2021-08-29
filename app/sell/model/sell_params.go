@@ -5,7 +5,7 @@ type SellParams struct {
 	CustomerOrderID  string  // 客户订单号
 	CustomerBatchID  string  // 客户批号
 	DeliverOrderID   string  // 送货单号
-	ModelNum         string  // 型号
+	ModelNum         string  `binding:"required"` // 型号
 	Specification    string  // 规格
 	Quantity         float64 // 数量
 	RestockUnitPrice float64 // 进货单价

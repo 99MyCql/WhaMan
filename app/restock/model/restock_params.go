@@ -4,11 +4,11 @@ package model
 type RestockParams struct {
 	Date          string  `binding:"required,datetime=2006-01-02"` // 日期(字符串形式)
 	ModelNum      string  `binding:"required"`                     // 型号
-	Specification string  `binding:"required"`                     // 规格
-	Quantity      float64 `binding:"required,ne=0"`                // 数量
-	UnitPrice     float64 `binding:"required,ne=0"`                // 单价
-	SupplierID    uint    `binding:"required,ne=0"`                // 供应商(外键)
-	PaidMoney     float64 `binding:"required"`                     // 已付金额
+	Specification string  // 规格
+	Quantity      float64 // 数量
+	UnitPrice     float64 // 单价
+	SupplierID    uint    // 供应商(外键)
+	PaidMoney     float64 // 已付金额
 	PayMethod     string  // 付款方式
 	Note          string  // 备注
 	Location      string  // 存放地点

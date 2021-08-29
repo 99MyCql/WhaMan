@@ -83,7 +83,8 @@ func (r *RestockImpl) Update(id uint, p *model.UpdateParams) error {
 
 		// 更新进货订单
 		newRO := p.GenRestockOrder()
-		if err := tx.Where("id = ?", id).Updates(newRO).Error; err != nil {
+		newRO.Model = oldRO.Model
+		if err := tx.Select("*").Updates(newRO).Error; err != nil {
 			return errors.Wrapf(err, "更新进货订单出错：%d-%+v", id, newRO)
 		}
 

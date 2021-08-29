@@ -2,8 +2,8 @@ package model
 
 // Params 用于Create、Update接口的输入参数
 type Params struct {
-	Name     string `binding:"required"`   // 供应商名
-	Phone    string `binding:"excludes= "` // 联系电话
+	Name     string `binding:"required"` // 供应商名
+	Phone    string // 联系电话
 	Contacts string // 联系人
 	Note     string // 备注
 }
