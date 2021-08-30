@@ -63,7 +63,7 @@ func (s *SupplierImpl) Update(id uint, p *model.Params) error {
 			}
 		}
 
-		if err := tx.Where("id = ?", id).Select("*").Updates(newSupplier).Error; err != nil {
+		if err := tx.Select("*").Omit("Turnover").Updates(newSupplier).Error; err != nil {
 			return errors.Wrapf(err, "更新供应商信息失败：%+v", newSupplier)
 		}
 		return nil

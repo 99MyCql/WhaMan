@@ -64,7 +64,7 @@ func (c *CustomerImpl) Update(id uint, p *model.Params) error {
 		}
 
 		// 更新
-		if err := tx.Select("*").Updates(newCustomer).Error; err != nil {
+		if err := tx.Select("*").Omit("Turnover", "UnpaidMoney").Updates(newCustomer).Error; err != nil {
 			return errors.Wrapf(err, "更新客户信息失败：%+v", newCustomer)
 		}
 		return nil
