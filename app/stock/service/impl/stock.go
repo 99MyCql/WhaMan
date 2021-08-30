@@ -13,21 +13,33 @@ import (
 type StockImpl struct{}
 
 // Find 查找
-func (StockImpl) Find(id uint) (*model.Stock, error) {
-	var stock *model.Stock
-	if err := global.DB.First(&stock, id).Error; err != nil {
+func (StockImpl) Find(id uint) (map[string]interface{}, error) {
+	data := make(map[string]interface{})
+	err := global.DB.Model(&model.Stock{}).
+		Select("stocks.*, restock_orders.date as restock_date, suppliers.name as supplier_name").
+		Joins("JOIN restock_orders ON restock_orders.stock_id = stocks.id").
+		Joins("JOIN suppliers ON restock_orders.supplier_id = suppliers.id ").
+		Where("stocks.id = ?", id).
+		Scan(&data).Error
+	if err != nil {
 		return nil, errors.Wrapf(err, "通过ID查询库存出错：%d", id)
 	}
-	return stock, nil
+	global.Log.Debugf("%+v", data)
+	return data, nil
 }
 
 // List 获取列表
-func (StockImpl) List() ([]*model.Stock, error) {
-	var stocks []*model.Stock
-	if err := global.DB.Find(&stocks).Error; err != nil {
-		return nil, errors.Wrapf(err, "获取库存列表失败")
+func (StockImpl) List() ([]map[string]interface{}, error) {
+	data := make([]map[string]interface{}, 0)
+	err := global.DB.Model(&model.Stock{}).
+		Select("stocks.*, restock_orders.date as restock_date, suppliers.name as supplier_name").
+		Joins("JOIN restock_orders ON restock_orders.stock_id = stocks.id").
+		Joins("JOIN suppliers ON restock_orders.supplier_id = suppliers.id ").
+		Scan(&data).Error
+	if err != nil {
+		return data, errors.Wrapf(err, "获取库存列表失败")
 	}
-	return stocks, nil
+	return data, nil
 }
 
 // Update
@@ -41,8 +53,8 @@ func (StockImpl) Update(id uint, p *model.UpdateParams) error {
 	return nil
 }
 
-// UpdateSellOrders 当单价发生变化时，更新关联出货订单的利润
-func (StockImpl) UpdateSellOrders(tx *gorm.DB, id uint, unitPrice float64) error {
+// updateSellOrders 当单价发生变化时，更新关联出货订单的利润
+func (StockImpl) updateSellOrders(tx *gorm.DB, id uint, unitPrice float64) error {
 	var sellOrders []*sellModel.SellOrder
 	if err := tx.Where("stock_id = ?", id).Find(&sellOrders).Error; err != nil {
 		return errors.Wrapf(err, "更新关联的出货订单过程中，查询出货订单出错：%d", id)

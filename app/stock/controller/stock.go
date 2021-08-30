@@ -32,14 +32,14 @@ func Get(c *gin.Context) {
 	}
 	global.Log.Debug(id)
 
-	stock, err := stockService.Find(uint(id))
+	data, err := stockService.Find(uint(id))
 	if err != nil {
 		global.Log.Errorf("%+v", err)
 		c.JSON(http.StatusOK, rsp.Err(rsp.GetFailed))
 		return
 	}
 
-	c.JSON(http.StatusOK, rsp.SucWithData(stock))
+	c.JSON(http.StatusOK, rsp.SucWithData(data))
 }
 
 // @Summary List
@@ -49,14 +49,14 @@ func Get(c *gin.Context) {
 // @Failure 200 {string} json "{"code":非0,"data":{},"msg":""}"
 // @Router /stock/list [post]
 func List(c *gin.Context) {
-	stocks, err := stockService.List()
+	data, err := stockService.List()
 	if err != nil {
 		global.Log.Errorf("%+v", err)
 		c.JSON(http.StatusOK, rsp.Err(rsp.ListFailed))
 		return
 	}
 
-	c.JSON(http.StatusOK, rsp.SucWithData(stocks))
+	c.JSON(http.StatusOK, rsp.SucWithData(data))
 }
 
 // @Summary Update
