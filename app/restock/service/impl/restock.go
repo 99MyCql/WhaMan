@@ -63,6 +63,13 @@ func (RestockImpl) List(option *model.ListOption) ([]*model.RestockOrder, error)
 		if option.Where.Date != nil {
 			tx = tx.Where("date >= ? and date < ?", option.Where.Date.StartDate, option.Where.Date.EndDate)
 		}
+		if option.Where.SupplierID != 0 {
+			tx = tx.Where("supplier_id = ?", option.Where.SupplierID)
+		}
+	}
+
+	if option.OrderBy != "" {
+		tx = tx.Order(option.OrderBy)
 	}
 
 	var restockOrders []*model.RestockOrder
@@ -84,7 +91,7 @@ func (r *RestockImpl) Update(id uint, p *model.UpdateParams) error {
 		// 更新进货订单
 		newRO := p.GenRestockOrder()
 		newRO.Model = oldRO.Model
-		if err := tx.Select("*").Updates(newRO).Error; err != nil {
+		if err := tx.Select("*").Omit("StockID").Updates(newRO).Error; err != nil {
 			return errors.Wrapf(err, "更新进货订单出错：%d-%+v", id, newRO)
 		}
 

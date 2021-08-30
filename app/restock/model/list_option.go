@@ -8,7 +8,9 @@ type ListOption struct {
 			StartDate string `binding:"datetime=2006-01-02"`
 			EndDate   string `binding:"datetime=2006-01-02"`
 		}
+		SupplierID uint
 	}
+	OrderBy string
 }
 
 func (o *ListOption) String() string {
