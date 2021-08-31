@@ -40,7 +40,7 @@ func (SupplierImpl) Find(id uint) (*model.Supplier, error) {
 // List 获取列表
 func (SupplierImpl) List() ([]*model.Supplier, error) {
 	var suppliers []*model.Supplier
-	if err := global.DB.Find(&suppliers).Error; err != nil {
+	if err := global.DB.Order("CONVERT(name USING gbk)").Find(&suppliers).Error; err != nil {
 		return nil, errors.Wrapf(err, "查询供应商列表出错")
 	}
 	return suppliers, nil
