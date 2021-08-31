@@ -48,12 +48,17 @@ func (r *RestockImpl) Restock(p *model.RestockParams) error {
 }
 
 // Find 查找
-func (RestockImpl) Find(id uint) (*model.RestockOrder, error) {
-	var restockOrder *model.RestockOrder
-	if err := global.DB.Find(&restockOrder, id).Error; err != nil {
+func (RestockImpl) Find(id uint) (map[string]interface{}, error) {
+	data := make(map[string]interface{})
+	err := global.DB.Model(&model.RestockOrder{}).
+		Select("restock_orders.*, suppliers.name as supplier_name").
+		Joins("JOIN suppliers ON restock_orders.supplier_id = suppliers.id").
+		Where("restock_orders.id = ?", id).
+		Scan(&data).Error
+	if err != nil {
 		return nil, errors.Wrapf(err, "通过ID查询进货订单出错：%d", id)
 	}
-	return restockOrder, nil
+	return data, nil
 }
 
 // List 查询所有进货订单，可指定查询条件和排序规则
@@ -65,6 +70,9 @@ func (RestockImpl) List(option *model.ListOption) ([]*model.RestockOrder, error)
 		}
 		if option.Where.SupplierID != 0 {
 			tx = tx.Where("supplier_id = ?", option.Where.SupplierID)
+		}
+		if option.Where.StockID != 0 {
+			tx = tx.Where("stock_id = ?", option.Where.StockID)
 		}
 	}
 
