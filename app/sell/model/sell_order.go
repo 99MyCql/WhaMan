@@ -23,6 +23,7 @@ type SellOrder struct {
 	UnitPrice        float64 `json:"unitPrice" gorm:"not null"`                        // 出货单价
 	SumMoney         float64 `json:"sumMoney" gorm:"not null"`                         // 金额
 	PaidMoney        float64 `json:"paidMoney" gorm:"not null"`                        // 已付金额
+	PayDate          string  `json:"payDate" gorm:"type:datetime;default:null"`        // 付款日期
 	PayMethod        string  `json:"payMethod" gorm:"type:varchar(100);"`              // 付款方式
 	FreightCost      float64 `json:"freightCost"`                                      // 运费
 	Kickback         float64 `json:"kickback"`                                         // 回扣

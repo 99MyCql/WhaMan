@@ -9,6 +9,7 @@ type ListOption struct {
 			EndDate   string `binding:"datetime=2006-01-02"`
 		}
 		CustomerID uint
+		StockID    uint
 	}
 	OrderBy string
 }

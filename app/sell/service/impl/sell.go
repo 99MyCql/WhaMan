@@ -14,6 +14,7 @@ import (
 type SellImpl struct{}
 
 // Sell 1.新增出货订单；2.更新库存；3.更新客户
+// TODO: 自动创建进货订单和库存
 func (s *SellImpl) Sell(p *model.SellParams) error {
 	return global.DB.Transaction(func(tx *gorm.DB) error {
 		// 新增出货订单
@@ -37,13 +38,17 @@ func (s *SellImpl) Sell(p *model.SellParams) error {
 }
 
 // Find 查找
-func (SellImpl) Find(id uint) (*model.SellOrder, error) {
-	// TODO: 连接查询获取客户信息和库存信息
-	var sellOrder *model.SellOrder
-	if err := global.DB.Find(&sellOrder, id).Error; err != nil {
+func (SellImpl) Find(id uint) (map[string]interface{}, error) {
+	data := make(map[string]interface{})
+	err := global.DB.Model(&model.SellOrder{}).
+		Select("sell_orders.*, customers.name as customer_name").
+		Joins("JOIN customers ON sell_orders.customer_id = customers.id").
+		Where("sell_orders.id = ?", id).
+		Scan(&data).Error
+	if err != nil {
 		return nil, errors.Wrapf(err, "通过ID查询出货订单出错：%d", id)
 	}
-	return sellOrder, nil
+	return data, nil
 }
 
 // List 查询所有出货订单，可指定查询条件和排序规则
@@ -55,6 +60,9 @@ func (SellImpl) List(option *model.ListOption) ([]*model.SellOrder, error) {
 		}
 		if option.Where.CustomerID != 0 {
 			tx = tx.Where("customer_id = ?", option.Where.CustomerID)
+		}
+		if option.Where.StockID != 0 {
+			tx = tx.Where("stock_id = ?", option.Where.StockID)
 		}
 	}
 
