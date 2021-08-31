@@ -9,7 +9,7 @@ type RestockOrder struct {
 	Date          string  `json:"date" gorm:"not null;type:datetime"`          // 日期(2000-01-01)
 	ModelNum      string  `json:"modelNum" gorm:"not null;type:varchar(100);"` // 型号
 	Specification string  `json:"specification" gorm:"type:varchar(100);"`     // 规格
-	Quantity      float64 `json:"quantity" gorm:"not null;type:varchar(100);"` // 数量
+	Quantity      float64 `json:"quantity" gorm:"not null"`                    // 数量
 	UnitPrice     float64 `json:"unitPrice" gorm:"not null"`                   // 单价
 	SumMoney      float64 `json:"sumMoney" gorm:"not null"`                    // 金额
 	PayMethod     string  `json:"payMethod" gorm:"type:varchar(100);"`         // 付款方式

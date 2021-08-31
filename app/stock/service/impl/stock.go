@@ -53,8 +53,8 @@ func (StockImpl) Update(id uint, p *model.UpdateParams) error {
 	return nil
 }
 
-// updateSellOrders 当单价发生变化时，更新关联出货订单的利润
-func (StockImpl) updateSellOrders(tx *gorm.DB, id uint, unitPrice float64) error {
+// UpdateSellOrders 当单价发生变化时，更新关联出货订单的利润
+func (StockImpl) UpdateSellOrders(tx *gorm.DB, id uint, unitPrice float64) error {
 	var sellOrders []*sellModel.SellOrder
 	if err := tx.Where("stock_id = ?", id).Find(&sellOrders).Error; err != nil {
 		return errors.Wrapf(err, "更新关联的出货订单过程中，查询出货订单出错：%d", id)
