@@ -13,7 +13,8 @@ func MyDatetimeValidate(field reflect.Value) interface{} {
 		if t.Valid == false {
 			return nil
 		}
-		return t
+		// 此处不能再返回models.MyDatetime类型，不然会陷入死循环，应返回内置类型
+		return t.Valid
 	}
 	return nil
 }
