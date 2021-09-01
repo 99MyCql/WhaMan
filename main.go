@@ -12,8 +12,9 @@ import (
 	"WhaMan/pkg/config"
 	"WhaMan/pkg/database"
 	"WhaMan/pkg/global"
+	"WhaMan/pkg/global/models"
 	"WhaMan/pkg/log"
-	"WhaMan/pkg/validators"
+	"WhaMan/pkg/validate"
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
@@ -38,9 +39,7 @@ func init() {
 func main() {
 	// 注册验证器
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
-		if err := v.RegisterValidation("datetime", validators.DatetimeFormat); err != nil {
-			global.Log.Fatal(err)
-		}
+		v.RegisterCustomTypeFunc(validate.MyDatetimeValidate, models.MyDatetime{})
 	}
 
 	r := gin.Default()

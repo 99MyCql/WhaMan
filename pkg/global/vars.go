@@ -7,11 +7,13 @@ import (
 	"gorm.io/gorm"
 )
 
-// Conf 全局配置数据
-var Conf *config.Conf
+var (
+	// Conf 全局配置数据
+	Conf *config.Conf
 
-// DB 全局数据库操作对象
-var DB *gorm.DB
+	// DB 全局数据库操作对象
+	DB *gorm.DB
 
-// Log 全局日志对象
-var Log *logrus.Logger
+	// Log 全局日志对象
+	Log *logrus.Logger
+)
