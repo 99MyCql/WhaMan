@@ -89,14 +89,14 @@ func (s *SellImpl) Update(id uint, p *model.SellParams) error {
 		newSO.Model = oldSO.Model
 		newSO.CalProfit()
 		// stock_id 为 0 时，Save更新数据会出错
+		var err error
 		if newSO.StockID == 0 {
-			if err := tx.Select("*").Omit("stock_id").Updates(newSO).Error; err != nil {
-				return errors.Wrapf(err, "更新出货订单出错：%d-%+v", id, newSO)
-			}
+			err = tx.Select("*").Omit("stock_id").Updates(newSO).Error
 		} else {
-			if err := tx.Save(newSO).Error; err != nil {
-				return errors.Wrapf(err, "更新出货订单出错：%d-%+v", id, newSO)
-			}
+			err = tx.Save(newSO).Error
+		}
+		if err != nil {
+			return errors.Wrapf(err, "更新出货订单出错：%d-%+v", id, newSO)
 		}
 
 		// 更新库存

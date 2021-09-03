@@ -2,7 +2,7 @@ package model
 
 import "WhaMan/pkg/global/models"
 
-// RestockParams 进货接口参数
+// RestockParams 进货信息创建、更新接口参数
 type RestockParams struct {
 	Date          models.MyDatetime `json:"date" binding:"required"`      // 日期(字符串形式)
 	ModelNum      string            `json:"model_num" binding:"required"` // 型号
@@ -27,6 +27,7 @@ func (p *RestockParams) GenRestockOrder() *RestockOrder {
 		SumMoney:      p.Quantity * p.UnitPrice,
 		SupplierID:    p.SupplierID,
 		PayMethod:     p.PayMethod,
+		Location:      p.Location,
 		Note:          p.Note,
 	}
 }

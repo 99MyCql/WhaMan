@@ -113,7 +113,7 @@ func UpdateRestockOrder(c *gin.Context) {
 		return
 	}
 	global.Log.Debug(id)
-	var req *model.UpdateParams
+	var req *model.RestockParams
 	if err := c.ShouldBind(&req); err != nil {
 		global.Log.Error(err)
 		c.JSON(http.StatusOK, rsp.ErrWithMsg(rsp.ParamError, err.Error()))

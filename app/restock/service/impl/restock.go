@@ -33,6 +33,7 @@ func (r *RestockImpl) Restock(p *model.RestockParams) error {
 			UnitPrice:       p.UnitPrice,
 			SumMoney:        p.Quantity * p.UnitPrice,
 			Location:        p.Location,
+			Note:            p.Note,
 			RestockOrder:    restockOrder,
 		}
 		if err := tx.Create(stock).Error; err != nil {
@@ -88,7 +89,7 @@ func (RestockImpl) List(option *model.ListOption) ([]*model.RestockOrder, error)
 }
 
 // Update 1.更新进货订单；2.更新关联的库存；3.更新关联的出货订单；4.更新关联的供应商信息
-func (r *RestockImpl) Update(id uint, p *model.UpdateParams) error {
+func (r *RestockImpl) Update(id uint, p *model.RestockParams) error {
 	return global.DB.Transaction(func(tx *gorm.DB) error {
 		// 查询原进货订单
 		var oldRO *model.RestockOrder
@@ -114,6 +115,8 @@ func (r *RestockImpl) Update(id uint, p *model.UpdateParams) error {
 		stock.RestockQuantity = newRO.Quantity
 		stock.CurQuantity = stock.RestockQuantity - stock.SellQuantity
 		stock.SumMoney = stock.CurQuantity * stock.UnitPrice
+		stock.Location = newRO.Location
+		stock.Note = newRO.Note
 		if err := tx.Save(stock).Error; err != nil {
 			return errors.Wrapf(err, "更新进货订单过程中，更新库存出错：%+v", stock)
 		}
