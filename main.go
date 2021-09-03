@@ -39,6 +39,9 @@ func init() {
 func main() {
 	// 注册验证器
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
+		if err := v.RegisterValidation("datetime", validate.DatetimeFormat); err != nil {
+			global.Log.Fatal(err)
+		}
 		v.RegisterCustomTypeFunc(validate.MyDatetimeValidate, models.MyDatetime{})
 	}
 

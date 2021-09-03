@@ -38,6 +38,7 @@ func (CustomerImpl) Find(id uint) (*model.Customer, error) {
 }
 
 // List 获取客户列表
+// TODO: 可根据条件进行筛选
 func (CustomerImpl) List() ([]*model.Customer, error) {
 	var customers []*model.Customer
 	if err := global.DB.Order("CONVERT(name USING gbk)").Find(&customers).Error; err != nil {

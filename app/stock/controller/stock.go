@@ -45,11 +45,20 @@ func Get(c *gin.Context) {
 // @Summary List
 // @Tags Stock
 // @Accept json
+// @Param data body model.ListOption true "选项"
 // @Success 200 {string} json "{"code":0,"data":{},"msg":""}"
 // @Failure 200 {string} json "{"code":非0,"data":{},"msg":""}"
 // @Router /stock/list [post]
 func List(c *gin.Context) {
-	data, err := stockService.List()
+	var req *model.ListOption
+	if err := c.ShouldBind(&req); err != nil {
+		global.Log.Error(err)
+		c.JSON(http.StatusOK, rsp.ErrWithMsg(rsp.ParamError, err.Error()))
+		return
+	}
+	global.Log.Debugf("%+v", req)
+
+	data, err := stockService.List(req)
 	if err != nil {
 		global.Log.Errorf("%+v", err)
 		c.JSON(http.StatusOK, rsp.Err(rsp.ListFailed))

@@ -29,10 +29,25 @@ func (StockImpl) Find(id uint) (map[string]interface{}, error) {
 }
 
 // List 获取列表
-func (StockImpl) List() ([]map[string]interface{}, error) {
+func (StockImpl) List(option *model.ListOption) ([]map[string]interface{}, error) {
 	data := make([]map[string]interface{}, 0)
-	err := global.DB.Model(&model.Stock{}).
-		Select("stocks.*, restock_orders.date as restock_date, suppliers.name as supplier_name").
+	tx := global.DB.Model(&model.Stock{})
+
+	if option.Where != nil {
+		if option.Where.CurQuantity != nil {
+			if option.Where.CurQuantity.Start != nil {
+				tx = tx.Where("cur_quantity >= ?", *option.Where.CurQuantity.Start)
+			}
+			if option.Where.CurQuantity.End != nil {
+				tx = tx.Where("cur_quantity < ?", *option.Where.CurQuantity.End)
+			}
+		}
+	}
+
+	if option.OrderBy != "" {
+		tx = tx.Order(option.OrderBy)
+	}
+	err := tx.Select("stocks.*, restock_orders.date as restock_date, suppliers.name as supplier_name").
 		Joins("JOIN restock_orders ON restock_orders.stock_id = stocks.id").
 		Joins("JOIN suppliers ON restock_orders.supplier_id = suppliers.id ").
 		Scan(&data).Error
