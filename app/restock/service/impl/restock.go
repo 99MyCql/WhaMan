@@ -41,7 +41,8 @@ func (r *RestockImpl) Restock(p *model.RestockParams) error {
 		}
 
 		// 更新关联的供应商信息
-		if err := r.updateSupplier(tx, restockOrder.SupplierID, restockOrder.SumMoney); err != nil {
+		if err := r.updateSupplier(tx, restockOrder.SupplierID, restockOrder.SumMoney,
+			restockOrder.PaidMoney); err != nil {
 			return errors.WithMessagef(err, "进货流程中，更新供应商信息出错：%d", restockOrder.SupplierID)
 		}
 		return nil
@@ -130,15 +131,16 @@ func (r *RestockImpl) Update(id uint, p *model.RestockParams) error {
 
 		// 如果供应商变更，更新旧新供应商信息
 		if oldRO.SupplierID != newRO.SupplierID {
-			if err := r.updateSupplier(tx, oldRO.SupplierID, -oldRO.SumMoney); err != nil {
+			if err := r.updateSupplier(tx, oldRO.SupplierID, -oldRO.SumMoney, -oldRO.PaidMoney); err != nil {
 				return errors.WithMessagef(err, "更新进货订单过程中，更新原供应商出错：%d", oldRO.SupplierID)
 			}
-			if err := r.updateSupplier(tx, newRO.SupplierID, newRO.SumMoney); err != nil {
+			if err := r.updateSupplier(tx, newRO.SupplierID, newRO.SumMoney, newRO.PaidMoney); err != nil {
 				return errors.WithMessagef(err, "更新进货订单过程中，更新新供应商出错：%d", newRO.SupplierID)
 			}
-		} else if oldRO.SumMoney != newRO.SumMoney {
-			// 如果总金额变更，更新供应商交易额
-			if err := r.updateSupplier(tx, newRO.SupplierID, newRO.SumMoney-oldRO.SumMoney); err != nil {
+		} else if oldRO.SumMoney != newRO.SumMoney || oldRO.PaidMoney != newRO.PaidMoney {
+			// 如果总金额或已付金额变更，更新供应商
+			if err := r.updateSupplier(tx, newRO.SupplierID, newRO.SumMoney-oldRO.SumMoney,
+				newRO.PaidMoney-oldRO.PaidMoney); err != nil {
 				return errors.WithMessagef(err, "更新进货订单过程中，更新供应商出错：%d", oldRO.SupplierID)
 			}
 		}
@@ -173,7 +175,8 @@ func (r *RestockImpl) Delete(id uint) error {
 		}
 
 		// 更新关联的供应商
-		if err := r.updateSupplier(tx, restockOrder.SupplierID, -restockOrder.SumMoney); err != nil {
+		if err := r.updateSupplier(tx, restockOrder.SupplierID, -restockOrder.SumMoney,
+			-restockOrder.PaidMoney); err != nil {
 			return errors.WithMessagef(err, "删除进货订单过程中，更新供应商出错：%d", restockOrder.SupplierID)
 		}
 
@@ -182,12 +185,13 @@ func (r *RestockImpl) Delete(id uint) error {
 }
 
 // updateSupplier 更新关联的供应商
-func (r RestockImpl) updateSupplier(tx *gorm.DB, supplierID uint, money float64) error {
+func (r RestockImpl) updateSupplier(tx *gorm.DB, supplierID uint, sumMoney float64, paidMoney float64) error {
 	var supplier *supplierModel.Supplier
 	if err := tx.First(&supplier, supplierID).Error; err != nil {
 		return errors.Wrapf(err, "更新关联供应商的过程中，查询供应商出错：%d", supplierID)
 	}
-	supplier.Turnover = supplier.Turnover + money
+	supplier.Turnover = supplier.Turnover + sumMoney
+	supplier.UnpaidMoney += sumMoney - paidMoney
 	if err := tx.Save(supplier).Error; err != nil {
 		return errors.Wrapf(err, "更新关联供应商的过程中，更新供应商出错：%+v", supplier)
 	}

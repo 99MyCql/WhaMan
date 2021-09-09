@@ -14,6 +14,7 @@ type RestockOrder struct {
 	Quantity      float64           `json:"quantity" gorm:"not null"`                    // 数量
 	UnitPrice     float64           `json:"unitPrice" gorm:"not null"`                   // 单价
 	SumMoney      float64           `json:"sumMoney" gorm:"not null"`                    // 金额
+	PaidMoney     float64           `json:"paidMoney" gorm:"not null"`                   // 已付金额
 	PayMethod     string            `json:"payMethod" gorm:"type:varchar(100);"`         // 付款方式
 	Location      string            `json:"location" gorm:"type:varchar(100);"`          // 存放地点
 	Note          string            `json:"note" gorm:"type:text"`                       // 备注
