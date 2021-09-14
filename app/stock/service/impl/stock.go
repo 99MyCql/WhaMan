@@ -39,7 +39,7 @@ func (StockImpl) List(option *model.ListOption) ([]map[string]interface{}, error
 				tx = tx.Where("cur_quantity >= ?", *option.Where.CurQuantity.Start)
 			}
 			if option.Where.CurQuantity.End != nil {
-				tx = tx.Where("cur_quantity < ?", *option.Where.CurQuantity.End)
+				tx = tx.Where("cur_quantity <= ?", *option.Where.CurQuantity.End)
 			}
 		}
 	}

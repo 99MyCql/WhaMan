@@ -13,7 +13,6 @@ import (
 type SellImpl struct{}
 
 // Sell 1.新增出货订单；2.更新库存；3.更新客户
-// TODO: 自动创建进货订单和库存
 func (s *SellImpl) Sell(p *model.SellParams) error {
 	return global.DB.Transaction(func(tx *gorm.DB) error {
 		// 新增出货订单
