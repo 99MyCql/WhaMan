@@ -5,6 +5,25 @@
 ## Getting Started
 
 - Go 1.16
+- MySQL 8.0
+
+根目录下创建配置文件`conf.yml`，并进行配置：
+
+```yaml
+env: debug # debug or product
+host: 0.0.0.0
+port: 8080
+mysqlUrl: <user>:<password>@tcp(<mysqlUrl>)/<database>?charset=utf8&parseTime=True&loc=Local
+sessionSecret: xxx
+username: xxx
+password: xxx
+sslCert: <ssl证书>
+sslKey: <ssl证书密钥>
+```
+
+ssl证书获取请参考：[CentOS 7 下 安装 Let's Encrypt 的通配符证书](https://qizhanming.com/blog/2019/04/23/how-to-install-let-s-encrypt-wildcards-certificate-on-centos-7)
+
+### Debug 环境
 
 1. 生成 swagger 文档：
 
@@ -17,6 +36,20 @@ swag init
 
 ```cmd
 go run main.go
+```
+
+### Product 环境
+
+1. 编译
+
+```
+go build -o WhaMan .
+```
+
+2. 运行
+
+```
+nohup ./WhaMan &
 ```
 
 ## Design
