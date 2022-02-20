@@ -43,6 +43,8 @@ func main() {
 	/*** 设置中间件 ***/
 	// 设置HTTPS
 	r.Use(middleware.TlsHandler())
+	// 日志中间件
+	r.Use(middleware.Log())
 	// 设置基于cookie的session中间件
 	store := cookie.NewStore([]byte(config.Conf.SessionSecret))
 	r.Use(sessions.Sessions("WhaManSession", store))
