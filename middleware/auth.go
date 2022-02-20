@@ -1,9 +1,8 @@
 package middleware
 
 import (
-	"net/http"
-
-	"WhaMan/pkg/global"
+	myErr "WhaMan/pkg/error"
+	"WhaMan/pkg/log"
 	"WhaMan/pkg/rsp"
 
 	"github.com/gin-contrib/sessions"
@@ -16,8 +15,8 @@ func AuthSession() func(c *gin.Context) {
 		session := sessions.Default(c)
 		// TODO: 设置超时时间
 		if session.Get("isLogin") == nil {
-			global.Log.Error("未登录")
-			c.JSON(http.StatusOK, rsp.Err(rsp.NotLoginErr))
+			log.Logger.Error("未登录")
+			c.JSON(rsp.Err(myErr.NotLogin))
 			c.Abort()
 			return
 		}

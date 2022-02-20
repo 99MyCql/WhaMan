@@ -2,6 +2,8 @@
 
 ## Introduction
 
+进销存管理系统
+
 ## Getting Started
 
 - Go 1.16
