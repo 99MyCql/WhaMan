@@ -26,7 +26,6 @@ func Login(c *gin.Context) {
 		c.JSON(rsp.Err(myErr.ParamErr))
 		return
 	}
-	log.Logger.Infof("%+v", req)
 
 	c.JSON(rsp.New(service.Login(req, c)))
 }

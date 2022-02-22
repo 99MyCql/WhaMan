@@ -28,7 +28,6 @@ func Get(c *gin.Context) {
 		c.JSON(rsp.Err(myErr.ParamErr))
 		return
 	}
-	log.Logger.Info(id)
 
 	c.JSON(rsp.NewWithData(service.Get(uint(id))))
 }
@@ -48,7 +47,6 @@ func List(c *gin.Context) {
 		c.JSON(rsp.Err(myErr.ParamErr))
 		return
 	}
-	log.Logger.Infof("%+v", req)
 
 	c.JSON(rsp.NewWithData(service.List(req)))
 }
@@ -69,14 +67,12 @@ func Update(c *gin.Context) {
 		c.JSON(rsp.Err(myErr.ParamErr))
 		return
 	}
-	log.Logger.Info(id)
 	var req *dto.UpdateReq
 	if err := c.ShouldBind(&req); err != nil {
 		log.Logger.Error(err)
 		c.JSON(rsp.Err(myErr.ParamErr))
 		return
 	}
-	log.Logger.Infof("%+v", req)
 
 	c.JSON(rsp.New(service.Update(uint(id), req)))
 }

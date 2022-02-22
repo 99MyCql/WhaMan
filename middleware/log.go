@@ -2,12 +2,10 @@ package middleware
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 
 	"WhaMan/pkg/log"
-	"WhaMan/pkg/rsp"
 
 	"github.com/gin-gonic/gin"
 )
@@ -42,8 +40,6 @@ func Log() func(c *gin.Context) {
 
 		c.Next()
 
-		rspData := &rsp.Response{}
-		json.Unmarshal([]byte(bodyLogWriter.body.String()), &rspData)
-		log.Logger.Infof("<=== %+v", rspData)
+		log.Logger.Infof("<=== %s", bodyLogWriter.body.String())
 	}
 }
