@@ -85,28 +85,27 @@ func (Service) List(req *dto.ListReq) ([]*dto.ComRsp, error) {
 }
 
 // Update 1.更新进货订单；2.更新关联的库存；3.更新关联的出货订单；4.更新关联的供应商信息
-func (s *Service) Update(id uint, p *dto.ComReq) error {
+func (s *Service) Update(id uint, req *dto.ComReq) error {
+	newRO := req.Convert2RestockOrder() // 不包括 StockID 字段
+	newRO.ID = id
+	log.Logger.Infof("newRO: %+v", newRO)
 	return database.DB.Transaction(func(tx *gorm.DB) error {
-		// 查询原进货订单
+		// 先查询原进货订单
 		var oldRO *do.RestockOrder
 		if err := tx.Find(&oldRO, id).Error; err != nil {
 			log.Logger.Error(err)
 			return myErr.ServerErr
 		}
 		log.Logger.Infof("oldRO: %+v", oldRO)
-
-		// 更新进货订单
-		newRO := p.Convert2RestockOrder()
-		newRO.ID = id
-		log.Logger.Infof("newRO: %+v", newRO)
-		if err := tx.Select("*").Omit("StockID", "CreatedAt").Updates(&newRO).Error; err != nil {
+		// 再更新进货订单
+		if err := tx.Omit("StockID", "CreatedAt").Updates(&newRO).Error; err != nil {
 			log.Logger.Error(err)
 			return myErr.ServerErr
 		}
 
-		// 更新关联的库存
+		// 更新关联的库存（由于不许更改 StockID ， ComReq 中没有 StockID 字段，更新库存时需使用 oldRO 中的 StockID ）
 		var stock *stockDO.Stock
-		if err := tx.Where("id = ?", newRO.StockID).First(&stock).Error; err != nil {
+		if err := tx.Where("id = ?", oldRO.StockID).First(&stock).Error; err != nil {
 			log.Logger.Error(err)
 			return myErr.ServerErr
 		}
@@ -119,7 +118,7 @@ func (s *Service) Update(id uint, p *dto.ComReq) error {
 		stock.Location = newRO.Location
 		stock.Note = newRO.Note
 		log.Logger.Infof("stock: %+v", stock)
-		if err := tx.Save(stock).Error; err != nil {
+		if err := tx.Save(&stock).Error; err != nil {
 			log.Logger.Error(err)
 			return myErr.ServerErr
 		}
@@ -173,12 +172,12 @@ func (s *Service) Delete(id uint) error {
 		if stock.SellQuantity != 0 {
 			return myErr.CannotDelete.AddMsg("已出货的库存不能删除")
 		}
-		// 删除库存
+		// 删除库存（软删除）
 		if err := tx.Delete(&stockDO.Stock{}, restockOrder.StockID).Error; err != nil {
 			log.Logger.Error(err)
 			return myErr.ServerErr
 		}
-		// 删除进货订单
+		// 删除进货订单（软删除）
 		if err := tx.Delete(&restockOrder).Error; err != nil {
 			log.Logger.Error(err)
 			return myErr.ServerErr

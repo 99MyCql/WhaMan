@@ -1,6 +1,7 @@
 package stock
 
 import (
+	restockDO "WhaMan/app/restock/do"
 	sellDO "WhaMan/app/sell/do"
 	"WhaMan/app/stock/do"
 	"WhaMan/app/stock/dto"
@@ -18,16 +19,24 @@ type Service struct{}
 // Get 查找
 func (Service) Get(id uint) (*dto.ComRsp, error) {
 	data := &dto.ComRsp{}
-	err := database.DB.Model(&do.Stock{}).
-		Select("stocks.*, restock_orders.date as restock_date, suppliers.name as supplier_name").
-		Joins("JOIN restock_orders ON restock_orders.stock_id = stocks.id").
-		Joins("JOIN suppliers ON restock_orders.supplier_id = suppliers.id ").
-		Where("stocks.id = ?", id).
-		Scan(&data).Error
-	if err != nil {
+	if err := database.DB.Model(&do.Stock{}).Where("id = ?", id).First(&data).Error; err != nil {
+		log.Logger.Error(err)
 		return nil, myErr.ServerErr
 	}
-	log.Logger.Debugf("%+v", data)
+	if err := database.DB.Model(&restockDO.RestockOrder{}).
+		Select("restock_orders.*, suppliers.name as supplier_name").
+		Joins("JOIN suppliers ON restock_orders.supplier_id = suppliers.id").
+		Where("stock_id = ?", id).
+		First(&data.RestockOrder).Error; err != nil {
+		log.Logger.Error(err)
+		return nil, myErr.ServerErr
+	}
+	if err := database.DB.Model(&sellDO.SellOrder{}).
+		Where("stock_id = ?", id).
+		Scan(&data.SellOrders).Error; err != nil {
+		log.Logger.Error(err)
+		return nil, myErr.ServerErr
+	}
 	return data, nil
 }
 
@@ -81,7 +90,7 @@ func (Service) UpdateSellOrders(tx *gorm.DB, id uint, unitPrice float64) error {
 	for i := 0; i < len(sellOrders); i++ {
 		sellOrders[i].RestockUnitPrice = unitPrice
 		sellOrders[i].CalProfit()
-		if err := tx.Model(&sellOrders[i]).Update("profit", sellOrders[i].Profit).Error; err != nil {
+		if err := tx.Model(&sellOrders[i]).Save(sellOrders[i]).Error; err != nil {
 			return errors.Wrapf(err, "更新关联的出货订单过程中，更新出货订单出错：%+v", sellOrders[i])
 		}
 	}

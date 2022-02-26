@@ -16,11 +16,11 @@ import (
 type Service struct{}
 
 // Create 新增
-func (s *Service) Create(p *dto.ComReq) error {
-	return database.DB.Transaction(func(tx *gorm.DB) error {
+func (s *Service) Create(p *dto.ComReq) (uint, error) {
+	sellOrder := p.Convert2SellOrder()
+	log.Logger.Infof("sellOrder: %+v", sellOrder)
+	err := database.DB.Transaction(func(tx *gorm.DB) error {
 		// 新增出货订单
-		sellOrder := p.Convert2SellOrder()
-		log.Logger.Infof("sellOrder: %+v", sellOrder)
 		if err := tx.Create(sellOrder).Error; err != nil {
 			log.Logger.Error(err)
 			return myErr.ServerErr
@@ -37,6 +37,7 @@ func (s *Service) Create(p *dto.ComReq) error {
 		}
 		return nil
 	})
+	return sellOrder.ID, err
 }
 
 // Get 查找
@@ -94,20 +95,15 @@ func (s *Service) Update(id uint, p *dto.ComReq) error {
 		newSO := p.Convert2SellOrder()
 		newSO.ID = id
 		log.Logger.Infof("newSO: %+v", newSO)
-		// stock_id 为 0 时，Save更新数据会出错
-		var err error
-		if newSO.StockID == 0 {
-			err = tx.Select("*").Omit("StockID", "CreatedAt").Updates(newSO).Error
-		} else {
-			err = tx.Save(newSO).Error
-		}
-		if err != nil {
+		if err := tx.Select("*").Omit("CreatedAt").Updates(newSO).Error; err != nil {
 			log.Logger.Error(err)
 			return myErr.ServerErr
 		}
 
 		// 更新库存
-		if oldSO.StockID != newSO.StockID {
+		if (newSO.StockID == nil && oldSO.StockID != nil) ||
+			(newSO.StockID != nil && oldSO.StockID == nil) ||
+			(newSO.StockID != nil && oldSO.StockID != nil && *(oldSO.StockID) != *(newSO.StockID)) {
 			// 若库存变更，同时更新新旧库存
 			if err := s.updateStock(tx, oldSO.StockID, -oldSO.Quantity); err != nil {
 				log.Logger.Error(err)
@@ -188,14 +184,14 @@ func (Service) updateCustomer(tx *gorm.DB, customerID uint, sumMoney float64, pa
 }
 
 // updateStock 更新关联的库存
-func (s Service) updateStock(tx *gorm.DB, stockID uint, quantity float64) error {
-	if stockID == 0 {
+func (s Service) updateStock(tx *gorm.DB, stockID *uint, quantity float64) error {
+	if stockID == nil {
 		return nil
 	}
 
 	var stock *stockDO.Stock
-	if err := tx.Where("id = ?", stockID).First(&stock).Error; err != nil {
-		return errors.Wrapf(err, "更新关联库存过程中，查询库存出错：%d", stockID)
+	if err := tx.Where("id = ?", *stockID).First(&stock).Error; err != nil {
+		return errors.Wrapf(err, "更新关联库存过程中，查询库存出错：%d", *stockID)
 	}
 	stock.SellQuantity += quantity
 	stock.CurQuantity = stock.RestockQuantity - stock.SellQuantity

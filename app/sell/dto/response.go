@@ -30,7 +30,7 @@ type ComRsp struct {
 	OtherCost        float64             `json:"other_cost"`
 	Profit           float64             `json:"profit"`
 	Note             string              `json:"note"`
-	StockID          uint                `json:"stock_id"`
+	StockID          *uint               `json:"stock_id"`
 	CustomerID       uint                `json:"customer_id"`
 	CustomerName     string              `json:"customer_name"`
 }

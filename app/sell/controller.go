@@ -29,7 +29,7 @@ func Create(c *gin.Context) {
 		return
 	}
 
-	c.JSON(rsp.New(service.Create(req)))
+	c.JSON(rsp.NewWithData(service.Create(req)))
 }
 
 // @Summary Get

@@ -26,7 +26,7 @@ type ComReq struct {
 	Tax              float64             `json:"tax"`                            // 税金
 	OtherCost        float64             `json:"other_cost"`                     // 杂费
 	Note             string              `json:"note"`                           // 备注
-	StockID          uint                `json:"stock_id"`                       // 库存编号(外键)
+	StockID          *uint               `json:"stock_id"`                       // 库存编号(外键)，为null则不关联库存
 	CustomerID       uint                `json:"customer_id" binding:"required"` // 客户编号(外键)
 }
 

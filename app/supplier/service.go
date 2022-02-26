@@ -1,6 +1,7 @@
 package supplier
 
 import (
+	restockDO "WhaMan/app/restock/do"
 	"WhaMan/app/supplier/do"
 	"WhaMan/app/supplier/dto"
 	"WhaMan/pkg/database"
@@ -41,8 +42,13 @@ func (s *Service) Create(p *dto.ComReq) (uint, error) {
 
 // Get 查找
 func (Service) Get(id uint) (*dto.ComRsp, error) {
-	var data *dto.ComRsp
+	data := &dto.ComRsp{}
 	if err := database.DB.Model(&do.Supplier{}).Where("id = ?", id).First(&data).Error; err != nil {
+		log.Logger.Error(err)
+		return nil, myErr.ServerErr
+	}
+	if err := database.DB.Model(&restockDO.RestockOrder{}).Where("supplier_id = ?", id).
+		Scan(&data.RestockOrders).Error; err != nil {
 		log.Logger.Error(err)
 		return nil, myErr.ServerErr
 	}

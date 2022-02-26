@@ -3,6 +3,7 @@ package customer
 import (
 	"WhaMan/app/customer/do"
 	"WhaMan/app/customer/dto"
+	sellDO "WhaMan/app/sell/do"
 	"WhaMan/pkg/database"
 	myErr "WhaMan/pkg/error"
 	"WhaMan/pkg/log"
@@ -43,6 +44,11 @@ func (s *Service) Create(req *dto.ComReq) (uint, error) {
 func (Service) Get(id uint) (*dto.ComRsp, error) {
 	var data *dto.ComRsp
 	if err := database.DB.Model(&do.Customer{}).Where("id = ?", id).First(&data).Error; err != nil {
+		log.Logger.Error(err)
+		return nil, myErr.ServerErr
+	}
+	if err := database.DB.Model(&sellDO.SellOrder{}).Where("customer_id = ?", id).
+		Scan(&data.SellOrders).Error; err != nil {
 		log.Logger.Error(err)
 		return nil, myErr.ServerErr
 	}
