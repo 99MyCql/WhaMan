@@ -8,7 +8,7 @@ import (
 	"WhaMan/pkg/datetime"
 )
 
-// ComReq Create,Update 接口请求参数
+// ComReq Create Update 接口请求参数。不能变更关联库存，不需要 StockID 字段
 type ComReq struct {
 	Date          datetime.MyDatetime `json:"date" binding:"required"`      // 日期
 	ModelNum      string              `json:"model_num" binding:"required"` // 型号
@@ -19,7 +19,7 @@ type ComReq struct {
 	PayMethod     string              `json:"pay_method"`                   // 付款方式
 	Note          string              `json:"note"`                         // 备注
 	Location      string              `json:"location"`                     // 存放地点
-	SupplierID    uint                // 供应商编号(外键)
+	SupplierID    uint                `json:"supplier_id"`                  // 供应商编号(外键)
 }
 
 // Convert2RestockOrder 根据进货信息生成进货订单
@@ -55,13 +55,13 @@ func (r *ComReq) Convert2Stock() *stockDO.Stock {
 type ListReq struct {
 	Where *struct {
 		Date *struct {
-			StartDate string `binding:"datetime=2006-01-02"`
-			EndDate   string `binding:"datetime=2006-01-02"`
-		}
-		SupplierID uint
-		StockID    uint
-	}
-	OrderBy string
+			StartDate string `json:"start_date" binding:"datetime=2006-01-02"`
+			EndDate   string `json:"end_date" binding:"datetime=2006-01-02"`
+		} `json:"date"`
+		SupplierID uint `json:"supplier_id"`
+		StockID    uint `json:"stock_id"`
+	} `json:"where"`
+	OrderBy string `json:"order_by"`
 }
 
 func (o *ListReq) String() string {

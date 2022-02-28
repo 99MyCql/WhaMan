@@ -13,7 +13,6 @@ import (
 // )
 
 type SellOrder struct {
-	// TODO: paidMoney已付款改为receivedMoney已收款
 	gorm.Model
 	Date             datetime.MyDatetime `gorm:"not null;type:datetime"`      // 日期
 	CustomerOrderID  string              `gorm:"type:varchar(100);"`          // 客户订单号
@@ -25,7 +24,7 @@ type SellOrder struct {
 	RestockUnitPrice float64             `gorm:"not null"`                    // 进货单价
 	UnitPrice        float64             `gorm:"not null"`                    // 出货单价
 	SumMoney         float64             `gorm:"not null"`                    // 金额
-	PaidMoney        float64             `gorm:"not null"`                    // 已付金额
+	PaidMoney        float64             `gorm:"not null"`                    // 已付金额（客户已经支付的金额）
 	PayDate          datetime.MyDatetime `gorm:"type:datetime;default:null"`  // 付款日期
 	PayMethod        string              `gorm:"type:varchar(100);"`          // 付款方式
 	FreightCost      float64             // 运费

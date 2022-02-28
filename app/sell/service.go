@@ -57,7 +57,9 @@ func (Service) Get(id uint) (*dto.ComRsp, error) {
 
 // List 查询所有出货订单，可指定查询条件和排序规则
 func (Service) List(req *dto.ListReq) ([]*dto.ComRsp, error) {
-	tx := database.DB.Model(&do.SellOrder{})
+	tx := database.DB.Model(&do.SellOrder{}).
+		Select("sell_orders.*, customers.name as customer_name").
+		Joins("JOIN customers ON sell_orders.customer_id = customers.id")
 	if req.Where != nil {
 		if req.Where.Date != nil {
 			tx = tx.Where("date >= ? and date < ?", req.Where.Date.StartDate, req.Where.Date.EndDate)

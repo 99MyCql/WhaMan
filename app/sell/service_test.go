@@ -22,7 +22,7 @@ func init() {
 	test.Init()
 }
 
-func Test_Create_Get_Update_Delete(t *testing.T) {
+func TestCreateAndGetAndUpdateAndDelete(t *testing.T) {
 	assert := require.New(t)
 	restockService := new(restock.Service)
 	supplierService := new(supplier.Service)
@@ -145,4 +145,17 @@ func Test_Create_Get_Update_Delete(t *testing.T) {
 	_customer, err = customerService.Get(customerBID)
 	assert.Nil(err)
 	assert.Equal(float64(0), _customer.Turnover)
+}
+
+func TestList(t *testing.T) {
+	assert := require.New(t)
+	service := new(Service)
+
+	req := &sellDTO.ListReq{
+		Where:   nil,
+		OrderBy: "date desc",
+	}
+	sellOrders, err := service.List(req)
+	assert.Nil(err)
+	t.Logf("%+v", sellOrders[0])
 }

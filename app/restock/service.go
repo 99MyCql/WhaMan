@@ -62,7 +62,9 @@ func (Service) Get(id uint) (*dto.ComRsp, error) {
 
 // List 查询所有进货订单，可指定查询条件和排序规则
 func (Service) List(req *dto.ListReq) ([]*dto.ComRsp, error) {
-	tx := database.DB.Model(&do.RestockOrder{})
+	tx := database.DB.Model(&do.RestockOrder{}).
+		Select("restock_orders.*, suppliers.name as supplier_name").
+		Joins("JOIN suppliers ON restock_orders.supplier_id = suppliers.id")
 	if req.Where != nil {
 		if req.Where.Date != nil {
 			tx = tx.Where("date >= ? and date < ?", req.Where.Date.StartDate, req.Where.Date.EndDate)
@@ -98,7 +100,7 @@ func (s *Service) Update(id uint, req *dto.ComReq) error {
 		}
 		log.Logger.Infof("oldRO: %+v", oldRO)
 		// 再更新进货订单
-		if err := tx.Omit("StockID", "CreatedAt").Updates(&newRO).Error; err != nil {
+		if err := tx.Select("*").Omit("StockID", "CreatedAt").Updates(&newRO).Error; err != nil {
 			log.Logger.Error(err)
 			return myErr.ServerErr
 		}

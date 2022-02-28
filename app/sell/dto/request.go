@@ -8,7 +8,6 @@ import (
 )
 
 type ComReq struct {
-	// TODO: paidMoney已付款改为receivedMoney已收款
 	Date             datetime.MyDatetime `json:"date" binding:"required"`        // 日期
 	CustomerOrderID  string              `json:"customer_order_id"`              // 客户订单号
 	CustomerBatchID  string              `json:"customer_batch_id"`              // 客户批号
@@ -18,7 +17,7 @@ type ComReq struct {
 	Quantity         float64             `json:"quantity"`                       // 数量
 	RestockUnitPrice float64             `json:"restock_unit_price"`             // 进货单价
 	UnitPrice        float64             `json:"unit_price"`                     // 单价
-	PaidMoney        float64             `json:"paid_money"`                     // 已付金额
+	PaidMoney        float64             `json:"paid_money"`                     // 已付金额（客户已经支付的金额）
 	PayDate          datetime.MyDatetime `json:"pay_date"`                       // 付款日期
 	PayMethod        string              `json:"pay_method"`                     // 付款方式
 	FreightCost      float64             `json:"freight_cost"`                   // 运费
@@ -60,13 +59,13 @@ func (r *ComReq) Convert2SellOrder() *do.SellOrder {
 type ListReq struct {
 	Where *struct {
 		Date *struct {
-			StartDate string `binding:"datetime=2006-01-02"`
-			EndDate   string `binding:"datetime=2006-01-02"`
-		}
-		CustomerID uint
-		StockID    uint
-	}
-	OrderBy string
+			StartDate string `json:"start_date" binding:"datetime=2006-01-02"`
+			EndDate   string `json:"end_date" binding:"datetime=2006-01-02"`
+		} `json:"date"`
+		CustomerID uint `json:"customer_id"`
+		StockID    uint `json:"stock_id"`
+	} `json:"where"`
+	OrderBy string `json:"order_by"`
 }
 
 func (r *ListReq) String() string {

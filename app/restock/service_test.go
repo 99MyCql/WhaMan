@@ -185,3 +185,16 @@ func TestUpdateAndDelete(t *testing.T) {
 	assert.Nil(err)
 	assert.Equal(supplierB.Turnover, float64(0)) // 供应商交易额应为0
 }
+
+func TestList(t *testing.T) {
+	assert := require.New(t)
+	service := new(Service)
+
+	req := &restockDTO.ListReq{
+		Where:   nil,
+		OrderBy: "",
+	}
+	restockOrders, err := service.List(req)
+	assert.Nil(err)
+	t.Logf("%+v", restockOrders[0])
+}

@@ -47,7 +47,9 @@ func (Service) Get(id uint) (*dto.ComRsp, error) {
 		log.Logger.Error(err)
 		return nil, myErr.ServerErr
 	}
-	if err := database.DB.Model(&restockDO.RestockOrder{}).Where("supplier_id = ?", id).
+	if err := database.DB.Model(&restockDO.RestockOrder{}).
+		Where("supplier_id = ?", id).
+		Order("date desc ").
 		Scan(&data.RestockOrders).Error; err != nil {
 		log.Logger.Error(err)
 		return nil, myErr.ServerErr

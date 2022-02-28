@@ -7,7 +7,6 @@ import (
 )
 
 type ComRsp struct {
-	// TODO: paidMoney已付款改为receivedMoney已收款
 	ID               uint                `json:"id"`
 	CreatedAt        time.Time           `json:"created_at"`
 	UpdatedAt        time.Time           `json:"updated_at"`

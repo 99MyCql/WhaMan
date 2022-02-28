@@ -19,7 +19,11 @@ type Service struct{}
 // Get 查找
 func (Service) Get(id uint) (*dto.ComRsp, error) {
 	data := &dto.ComRsp{}
-	if err := database.DB.Model(&do.Stock{}).Where("id = ?", id).First(&data).Error; err != nil {
+	if err := database.DB.Model(&do.Stock{}).
+		Select("stocks.*, restock_orders.date as restock_date, suppliers.name as supplier_name").
+		Joins("JOIN restock_orders ON restock_orders.stock_id = stocks.id").
+		Joins("JOIN suppliers ON restock_orders.supplier_id = suppliers.id ").
+		Where("stocks.id = ?", id).First(&data).Error; err != nil {
 		log.Logger.Error(err)
 		return nil, myErr.ServerErr
 	}
@@ -43,7 +47,10 @@ func (Service) Get(id uint) (*dto.ComRsp, error) {
 // List 获取列表
 func (Service) List(req *dto.ListReq) ([]*dto.ComRsp, error) {
 	data := make([]*dto.ComRsp, 0)
-	tx := database.DB.Model(&do.Stock{})
+	tx := database.DB.Model(&do.Stock{}).
+		Select("stocks.*, restock_orders.date as restock_date, suppliers.name as supplier_name").
+		Joins("JOIN restock_orders ON restock_orders.stock_id = stocks.id").
+		Joins("JOIN suppliers ON restock_orders.supplier_id = suppliers.id ")
 
 	if req.Where != nil {
 		if req.Where.CurQuantity != nil {
@@ -58,11 +65,7 @@ func (Service) List(req *dto.ListReq) ([]*dto.ComRsp, error) {
 	if req.OrderBy != "" {
 		tx = tx.Order(req.OrderBy)
 	}
-	err := tx.Select("stocks.*, restock_orders.date as restock_date, suppliers.name as supplier_name").
-		Joins("JOIN restock_orders ON restock_orders.stock_id = stocks.id").
-		Joins("JOIN suppliers ON restock_orders.supplier_id = suppliers.id ").
-		Scan(&data).Error
-	if err != nil {
+	if err := tx.Scan(&data).Error; err != nil {
 		log.Logger.Error(err)
 		return data, myErr.ServerErr
 	}
