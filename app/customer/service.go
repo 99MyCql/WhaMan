@@ -41,33 +41,55 @@ func (s *Service) Create(req *dto.ComReq) (uint, error) {
 }
 
 // Get 查找
-func (Service) Get(id uint) (*dto.ComRsp, error) {
-	var data *dto.ComRsp
-	if err := database.DB.Model(&do.Customer{}).Where("id = ?", id).First(&data).Error; err != nil {
-		log.Logger.Error(err)
-		return nil, myErr.ServerErr
-	}
-	if err := database.DB.Model(&sellDO.SellOrder{}).
-		Where("customer_id = ?", id).
-		Order("date desc ").
-		Scan(&data.SellOrders).Error; err != nil {
-		log.Logger.Error(err)
-		return nil, myErr.ServerErr
-	}
-	return data, nil
+func (Service) Get(id uint) (*dto.GetRsp, error) {
+	var data *dto.GetRsp
+	err := database.DB.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Model(&do.Customer{}).Where("id = ?", id).First(&data).Error; err != nil {
+			log.Logger.Error(err)
+			return myErr.ServerErr
+		}
+		if err := tx.Model(&sellDO.SellOrder{}).
+			Where("customer_id = ?", id).
+			Order("date desc").
+			Scan(&data.SellOrders).Error; err != nil {
+			log.Logger.Error(err)
+			return myErr.ServerErr
+		}
+		return nil
+	})
+	return data, err
 }
 
 // List 获取客户列表
-// TODO: 可根据条件进行筛选
-func (Service) List() ([]*dto.ComRsp, error) {
-	var data []*dto.ComRsp
-	if err := database.DB.Model(&do.Customer{}).
-		Order("CONVERT(name USING gbk)").
-		Omit("SellOrders").Scan(&data).Error; err != nil {
+func (Service) List(req *dto.ListReq) ([]*dto.ListRsp, error) {
+	// 构造子查询
+	sellOrderSubTx := database.DB.Model(&sellDO.SellOrder{}).Select("*")
+	if req.SellOrdersWhere != nil {
+		if req.SellOrdersWhere.Date != nil {
+			if req.SellOrdersWhere.Date.StartDate != "" {
+				sellOrderSubTx = sellOrderSubTx.Where("date >= ?", req.SellOrdersWhere.Date.StartDate)
+			}
+			if req.SellOrdersWhere.Date.EndDate != "" {
+				sellOrderSubTx = sellOrderSubTx.Where("date < ?", req.SellOrdersWhere.Date.EndDate)
+			}
+		}
+	}
+
+	// 统计交易额、利润、已收款等信息
+	tx := database.DB.Model(&do.Customer{}).
+		Select("customers.*, SUM(so.unit_price*so.quantity) as turnover, SUM((so.unit_price-so.restock_unit_price)*so.quantity-so.freight_cost-so.kickback-so.tax-so.other_cost) as profit, SUM(so.paid_money) as paid_money ").
+		Joins("LEFT JOIN (?) so ON customers.id = so.customer_id", sellOrderSubTx).
+		Group("customers.id")
+	if req.OrderBy == "" {
+		req.OrderBy = "CONVERT(name USING gbk)" // 默认
+	}
+	tx = tx.Order(req.OrderBy)
+	var customers []*dto.ListRsp
+	if err := tx.Scan(&customers).Error; err != nil {
 		log.Logger.Error(err)
 		return nil, myErr.ServerErr
 	}
-	return data, nil
+	return customers, nil
 }
 
 // Update 更新
@@ -106,17 +128,15 @@ func (s *Service) Update(id uint, req *dto.ComReq) error {
 // Delete 删除
 func (Service) Delete(id uint) error {
 	return database.DB.Transaction(func(tx *gorm.DB) error {
-		// 检查交易额，不为零不能删除
-		var customer *do.Customer
-		if err := tx.First(&customer, id).Error; err != nil {
-			if errors.Is(err, gorm.ErrRecordNotFound) {
-				return myErr.NotFound.AddMsg("客户ID不存在")
-			}
+		// 存在关联的出货订单，不能删除
+		sellOrders := make([]sellDO.SellOrder, 0)
+		if err := tx.Model(&sellDO.SellOrder{}).Where("customer_id = ?", id).
+			Find(&sellOrders).Error; err != nil {
 			log.Logger.Error(err)
 			return myErr.ServerErr
 		}
-		if customer.Turnover != 0 {
-			return myErr.CannotDelete.AddMsg("交易额不为零不能删除")
+		if len(sellOrders) != 0 {
+			return myErr.CannotDelete.AddMsg("存在关联的出货订单，不能删除")
 		}
 
 		// 删除

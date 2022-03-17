@@ -55,12 +55,19 @@ func Get(c *gin.Context) {
 // @Summary List
 // @Tags Customer
 // @Accept json
+// @Param data body dto.ListReq true "请求参数"
 // @Success 200 {object} rsp.ResponseExample "code=200"
 // @Failure 400 {object} rsp.ResponseExample "code=4xxxxx"
 // @Failure 500 {object} rsp.ResponseExample "code=5xxxxx"
 // @Router /customer/list [post]
 func List(c *gin.Context) {
-	c.JSON(rsp.NewWithData(service.List()))
+	var req *dto.ListReq
+	if err := c.ShouldBind(&req); err != nil {
+		log.Logger.Error(err)
+		c.JSON(rsp.Err(myErr.ParamErr))
+		return
+	}
+	c.JSON(rsp.NewWithData(service.List(req)))
 }
 
 // @Summary Update

@@ -4,7 +4,6 @@ import (
 	"WhaMan/app/customer"
 	"WhaMan/app/restock"
 	sellController "WhaMan/app/sell"
-	"WhaMan/app/stock"
 	"WhaMan/app/supplier"
 	"WhaMan/app/user"
 	_ "WhaMan/docs"
@@ -65,6 +64,7 @@ func main() {
 		restockRouter.POST("/create", restock.Create)
 		restockRouter.GET("/get/:id", restock.Get)
 		restockRouter.POST("/list", restock.List)
+		restockRouter.POST("/listGroupByModelNum", restock.ListGroupByModelNum)
 		restockRouter.POST("/update/:id", restock.Update)
 		restockRouter.GET("/delete/:id", restock.Delete)
 	}
@@ -76,13 +76,6 @@ func main() {
 		sellRouter.POST("/list", sellController.List)
 		sellRouter.POST("/update/:id", sellController.Update)
 		sellRouter.GET("/delete/:id", sellController.Delete)
-	}
-	stockRouter := r.Group("/stock")
-	stockRouter.Use(middleware.AuthSession())
-	{
-		stockRouter.GET("/get/:id", stock.Get)
-		stockRouter.POST("/list", stock.List)
-		stockRouter.POST("/update/:id", stock.Update)
 	}
 	customerRouter := r.Group("/customer")
 	customerRouter.Use(middleware.AuthSession())

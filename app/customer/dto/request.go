@@ -1,6 +1,10 @@
 package dto
 
-import "WhaMan/app/customer/do"
+import (
+	"encoding/json"
+
+	"WhaMan/app/customer/do"
+)
 
 // ComReq 创建、更新的请求参数
 type ComReq struct {
@@ -17,4 +21,30 @@ func (r *ComReq) Convert2Customer() *do.Customer {
 		Phone:    r.Phone,
 		Note:     r.Note,
 	}
+}
+
+type Date struct {
+	StartDate string `json:"start_date" binding:"datetime=2006-01-02"`
+	EndDate   string `json:"end_date" binding:"datetime=2006-01-02"`
+}
+
+type SellOrdersWhere struct {
+	Date *Date `json:"date"`
+}
+
+type Where struct {
+}
+
+type ListReq struct {
+	Where           *Where           `json:"where"`
+	OrderBy         string           `json:"order_by"`
+	SellOrdersWhere *SellOrdersWhere `json:"sell_orders_where"`
+}
+
+func (r *ListReq) String() string {
+	out, err := json.Marshal(r)
+	if err != nil {
+		return err.Error()
+	}
+	return string(out)
 }

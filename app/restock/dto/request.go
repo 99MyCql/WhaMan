@@ -4,11 +4,10 @@ import (
 	"encoding/json"
 
 	"WhaMan/app/restock/do"
-	stockDO "WhaMan/app/stock/do"
 	"WhaMan/pkg/datetime"
 )
 
-// ComReq Create Update 接口请求参数。不能变更关联库存，不需要 StockID 字段
+// ComReq Create Update 接口请求参数
 type ComReq struct {
 	Date          datetime.MyDatetime `json:"date" binding:"required"`      // 日期
 	ModelNum      string              `json:"model_num" binding:"required"` // 型号
@@ -30,7 +29,6 @@ func (r *ComReq) Convert2RestockOrder() *do.RestockOrder {
 		Specification: r.Specification,
 		Quantity:      r.Quantity,
 		UnitPrice:     r.UnitPrice,
-		SumMoney:      r.Quantity * r.UnitPrice,
 		PaidMoney:     r.PaidMoney,
 		PayMethod:     r.PayMethod,
 		Location:      r.Location,
@@ -39,32 +37,41 @@ func (r *ComReq) Convert2RestockOrder() *do.RestockOrder {
 	}
 }
 
-func (r *ComReq) Convert2Stock() *stockDO.Stock {
-	return &stockDO.Stock{
-		ModelNum:        r.ModelNum,
-		Specification:   r.Specification,
-		RestockQuantity: r.Quantity,
-		CurQuantity:     r.Quantity,
-		UnitPrice:       r.UnitPrice,
-		SumMoney:        r.Quantity * r.UnitPrice,
-		Location:        r.Location,
-		Note:            r.Note,
-	}
+type Date struct {
+	StartDate string `json:"start_date" binding:"datetime=2006-01-02"`
+	EndDate   string `json:"end_date" binding:"datetime=2006-01-02"`
+}
+
+type Where struct {
+	Date       *Date  `json:"date"`
+	SupplierID uint   `json:"supplier_id"`
+	ModelNum   string `json:"model_num"`
+}
+
+type SellOrdersWhere struct {
+	Date *Date `json:"date"`
 }
 
 type ListReq struct {
-	Where *struct {
-		Date *struct {
-			StartDate string `json:"start_date" binding:"datetime=2006-01-02"`
-			EndDate   string `json:"end_date" binding:"datetime=2006-01-02"`
-		} `json:"date"`
-		SupplierID uint `json:"supplier_id"`
-		StockID    uint `json:"stock_id"`
-	} `json:"where"`
-	OrderBy string `json:"order_by"`
+	Where           *Where           `json:"where"`
+	OrderBy         string           `json:"order_by"`
+	WithSellOrders  bool             `json:"with_sell_orders"`
+	SellOrdersWhere *SellOrdersWhere `json:"sell_orders_where"`
 }
 
 func (o *ListReq) String() string {
+	out, err := json.Marshal(o)
+	if err != nil {
+		return err.Error()
+	}
+	return string(out)
+}
+
+type ListGroupByModelNumReq struct {
+	OrderBy string `json:"order_by"`
+}
+
+func (o *ListGroupByModelNumReq) String() string {
 	out, err := json.Marshal(o)
 	if err != nil {
 		return err.Error()

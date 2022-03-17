@@ -118,3 +118,42 @@ func TestGet(t *testing.T) {
 	t.Logf("%+v", supplier.RestockOrders[0])
 	assert.Equal(supplier.RestockOrders[0].ID, restockOrderID)
 }
+
+func TestList(t *testing.T) {
+	assert := require.New(t)
+	service := new(Service)
+	restockService := new(restock.Service)
+	supplierID, err := service.Create(&dto.ComReq{
+		Name: "A",
+	})
+	assert.Nil(err)
+	defer func() {
+		assert.Nil(service.Delete(supplierID))
+	}()
+
+	// 创建进货订单
+	restockOrderID, err := restockService.Create(&restockDTO.ComReq{
+		Date: datetime.MyDatetime{
+			Time:  time.Now(),
+			Valid: true,
+		},
+		ModelNum:      "PC",
+		Specification: "PC",
+		Quantity:      100,
+		UnitPrice:     13,
+		SupplierID:    supplierID,
+		PaidMoney:     1300,
+	})
+	assert.Nil(err)
+	defer func() {
+		assert.Nil(restockService.Delete(restockOrderID))
+	}()
+
+	suppliers, err := service.List(&dto.ListReq{
+		Where:              nil,
+		OrderBy:            "",
+		RestockOrdersWhere: nil,
+	})
+	assert.Nil(err)
+	t.Logf("%+v", suppliers[0])
+}

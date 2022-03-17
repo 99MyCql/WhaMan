@@ -8,7 +8,6 @@ import (
 	customerDO "WhaMan/app/customer/do"
 	restockDO "WhaMan/app/restock/do"
 	sellDO "WhaMan/app/sell/do"
-	stockDO "WhaMan/app/stock/do"
 	supplierDO "WhaMan/app/supplier/do"
 	"WhaMan/pkg/config"
 
@@ -43,7 +42,7 @@ func Init() {
 	// 如果大小、精度、是否为空可以更改，则 AutoMigrate 会改变列的类型。
 	// 出于保护您数据的目的，它不会删除未使用的列
 	err = DB.Set("gorm:table_options", "ENGINE=InnoDB  DEFAULT CHARSET=utf8").
-		AutoMigrate(&customerDO.Customer{}, &stockDO.Stock{}, &supplierDO.Supplier{},
+		AutoMigrate(&customerDO.Customer{}, &supplierDO.Supplier{},
 			&restockDO.RestockOrder{}, &sellDO.SellOrder{})
 	if err != nil {
 		panic(err)
