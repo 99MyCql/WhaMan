@@ -42,21 +42,21 @@ type Date struct {
 	EndDate   string `json:"end_date" binding:"datetime=2006-01-02"`
 }
 
-type Where struct {
-	Date       *Date  `json:"date"`
-	SupplierID uint   `json:"supplier_id"`
-	ModelNum   string `json:"model_num"`
+type CurQuantity struct {
+	Start *float64 `json:"start"`
+	End   *float64 `json:"end"`
 }
 
-type SellOrdersWhere struct {
-	Date *Date `json:"date"`
+type Where struct {
+	Date        *Date        `json:"date"`
+	SupplierID  uint         `json:"supplier_id"`
+	ModelNum    string       `json:"model_num"`
+	CurQuantity *CurQuantity `json:"cur_quantity"`
 }
 
 type ListReq struct {
-	Where           *Where           `json:"where"`
-	OrderBy         string           `json:"order_by"`
-	WithSellOrders  bool             `json:"with_sell_orders"`
-	SellOrdersWhere *SellOrdersWhere `json:"sell_orders_where"`
+	Where   *Where `json:"where"`
+	OrderBy string `json:"order_by"`
 }
 
 func (o *ListReq) String() string {

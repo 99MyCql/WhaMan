@@ -29,14 +29,14 @@ func (s *Service) Create(p *dto.ComReq) (uint, error) {
 }
 
 // Get 查找
-func (Service) Get(id uint) (*dto.ComRsp, error) {
-	data := &dto.ComRsp{}
+func (Service) Get(id uint) (*dto.GetRsp, error) {
+	var restockOrder *dto.GetRsp
 	err := database.DB.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Model(&do.RestockOrder{}).
 			Select("restock_orders.*, suppliers.name as supplier_name").
 			Joins("JOIN suppliers ON restock_orders.supplier_id = suppliers.id").
 			Where("restock_orders.id = ?", id).
-			First(&data).Error; err != nil {
+			First(&restockOrder).Error; err != nil {
 			log.Logger.Error(err)
 			return myErr.ServerErr
 		}
@@ -45,26 +45,35 @@ func (Service) Get(id uint) (*dto.ComRsp, error) {
 			Joins("JOIN customers ON sell_orders.customer_id = customers.id").
 			Where("sell_orders.restock_order_id = ?", id).
 			Order("date desc").
-			Scan(&data.SellOrders).Error; err != nil {
+			Scan(&restockOrder.SellOrders).Error; err != nil {
 			log.Logger.Error(err)
 			return myErr.ServerErr
 		}
 		return nil
 	})
-	return data, err
+	return restockOrder, err
 }
 
 // List 查询所有进货订单，可指定查询条件和排序规则
-func (Service) List(req *dto.ListReq) ([]*dto.ComRsp, error) {
-	var restockOrders []*dto.ComRsp
+func (Service) List(req *dto.ListReq) ([]*dto.ListRsp, error) {
+	var restockOrders []*dto.ListRsp
 	err := database.DB.Transaction(func(txDB *gorm.DB) error {
-		tx := txDB.Model(&do.RestockOrder{}).
-			Select("restock_orders.*, suppliers.name as supplier_name").
-			Joins("JOIN suppliers ON restock_orders.supplier_id = suppliers.id")
+		subTx := txDB.Model(&do.RestockOrder{}).
+			Select("restock_orders.*, suppliers.name as supplier_name, "+
+				"SUM(IFNULL(so.quantity, 0)) as sell_quantity, "+
+				"SUM((so.unit_price-so.restock_unit_price)*so.quantity-so.freight_cost-so.kickback-so.tax-so.other_cost) as profit").
+			Joins("JOIN suppliers ON restock_orders.supplier_id = suppliers.id").
+			Joins("LEFT JOIN (?) so ON restock_orders.id = so.restock_order_id",
+				database.DB.Model(&sellDO.SellOrder{}).
+					Select("quantity, unit_price, restock_unit_price, freight_cost, "+
+						"kickback, tax, other_cost, restock_order_id"),
+			).
+			Group("restock_orders.id")
+		tx := txDB.Table("(?) t", subTx).Select("*") // 如此才能使用别名
 
 		// 设置排序规则
 		if req.OrderBy == "" {
-			req.OrderBy = "restock_orders.date desc"
+			req.OrderBy = "date desc"
 		}
 		tx = tx.Order(req.OrderBy)
 
@@ -72,52 +81,32 @@ func (Service) List(req *dto.ListReq) ([]*dto.ComRsp, error) {
 		if req.Where != nil {
 			if req.Where.Date != nil {
 				if req.Where.Date.StartDate != "" {
-					tx = tx.Where("restock_orders.date >= ?", req.Where.Date.StartDate)
+					tx = tx.Where("date >= ?", req.Where.Date.StartDate)
 				}
 				if req.Where.Date.EndDate != "" {
-					tx = tx.Where("restock_orders.date < ?", req.Where.Date.EndDate)
+					tx = tx.Where("date < ?", req.Where.Date.EndDate)
 				}
 			}
 			if req.Where.SupplierID != 0 {
-				tx = tx.Where("restock_orders.supplier_id = ?", req.Where.SupplierID)
+				tx = tx.Where("supplier_id = ?", req.Where.SupplierID)
 			}
 			if req.Where.ModelNum != "" {
-				tx = tx.Where("restock_orders.model_num = ?", req.Where.ModelNum)
+				tx = tx.Where("model_num = ?", req.Where.ModelNum)
+			}
+			if req.Where.CurQuantity != nil {
+				if req.Where.CurQuantity.Start != nil {
+					tx = tx.Where("quantity - sell_quantity >= ?", req.Where.CurQuantity.Start)
+				}
+				if req.Where.CurQuantity.End != nil {
+					tx = tx.Where("quantity - sell_quantity < ?", req.Where.CurQuantity.End)
+				}
 			}
 		}
 
-		// 查询
+		// 查询进货订单
 		if err := tx.Scan(&restockOrders).Error; err != nil {
 			log.Logger.Error(err)
 			return myErr.ServerErr
-		}
-
-		// 如果不需要出货订单，则直接返回
-		if !req.WithSellOrders {
-			return nil
-		}
-
-		// 查询每个进货订单关联的出货订单
-		for i := 0; i < len(restockOrders); i++ {
-			txTemp := txDB.Model(&sellDO.SellOrder{}).
-				Select("sell_orders.*, customers.name as customer_name").
-				Joins("JOIN customers ON sell_orders.customer_id = customers.id").
-				Where("sell_orders.restock_order_id = ?", restockOrders[i].ID).
-				Order("date desc")
-			if req.SellOrdersWhere != nil {
-				if req.SellOrdersWhere.Date != nil {
-					if req.SellOrdersWhere.Date.StartDate != "" {
-						txTemp = txTemp.Where("sell_orders.date >= ?", req.SellOrdersWhere.Date.StartDate)
-					}
-					if req.SellOrdersWhere.Date.EndDate != "" {
-						txTemp = txTemp.Where("sell_orders.date < ?", req.SellOrdersWhere.Date.EndDate)
-					}
-				}
-			}
-			if err := txTemp.Scan(&restockOrders[i].SellOrders).Error; err != nil {
-				log.Logger.Error(err)
-				return myErr.ServerErr
-			}
 		}
 		return nil
 	})
@@ -128,11 +117,14 @@ func (Service) List(req *dto.ListReq) ([]*dto.ComRsp, error) {
 func (Service) ListGroupByModelNum(req *dto.ListGroupByModelNumReq) ([]*dto.ListGroupByModelNumRsp, error) {
 	// 构造子查询，连接查询关联的出货订单，统计每笔进货订单的剩余库存、利润
 	subTx := database.DB.Model(&do.RestockOrder{}).
-		Select("restock_orders.model_num, restock_orders.unit_price, " +
-			"restock_orders.quantity-SUM(so.quantity) as cur_quantity, " +
+		Select("restock_orders.model_num, restock_orders.unit_price, "+
+			"restock_orders.quantity-SUM(IFNULL(so.quantity, 0)) as cur_quantity, "+
 			"SUM((so.unit_price-so.restock_unit_price)*so.quantity-so.freight_cost-so.kickback-so.tax-so.other_cost) as profit").
-		Joins("JOIN sell_orders so ON restock_orders.id = so.restock_order_id").
-		Where("so.deleted_at IS NULL").
+		Joins("LEFT JOIN (?) so ON restock_orders.id = so.restock_order_id",
+			database.DB.Model(&sellDO.SellOrder{}).
+				Select("quantity, unit_price, restock_unit_price, freight_cost, "+
+					"kickback, tax, other_cost, restock_order_id"),
+		).
 		Group("restock_orders.id")
 
 	tx := database.DB.Table("(?) as t", subTx).

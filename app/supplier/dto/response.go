@@ -15,7 +15,7 @@ type GetRsp struct {
 	Contacts      string               `json:"contacts"`
 	Phone         string               `json:"phone"`
 	Note          string               `json:"note"`
-	RestockOrders []*restockDTO.ComRsp `json:"restock_orders" gorm:"-"`
+	RestockOrders []*restockDTO.GetRsp `json:"restock_orders" gorm:"-"`
 }
 
 type ListRsp struct {

@@ -199,14 +199,34 @@ func TestDelete(t *testing.T) {
 	assert.Nil(restockService.Delete(restockOrderID))
 }
 
+func TestGet(t *testing.T) {
+	assert := require.New(t)
+	service := new(Service)
+
+	restockOrder, err := service.Get(185)
+	assert.Nil(err)
+	t.Logf("%+v", restockOrder)
+}
+
 func TestList(t *testing.T) {
 	assert := require.New(t)
 	service := new(Service)
 
+	minQuantity := float64(1)
 	req := &restockDTO.ListReq{
-		Where:          nil,
-		OrderBy:        "",
-		WithSellOrders: true,
+		Where: &restockDTO.Where{
+			Date: &restockDTO.Date{
+				StartDate: "2021-01-01",
+				EndDate:   "",
+			},
+			SupplierID: 0,
+			ModelNum:   "",
+			CurQuantity: &restockDTO.CurQuantity{
+				Start: &minQuantity,
+				End:   nil,
+			},
+		},
+		OrderBy: "",
 	}
 	restockOrders, err := service.List(req)
 	assert.Nil(err)

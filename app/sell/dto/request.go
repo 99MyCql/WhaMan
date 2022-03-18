@@ -25,9 +25,10 @@ type ComReq struct {
 	OtherCost       float64             `json:"other_cost"`                    // 杂费
 	Note            string              `json:"note"`                          // 备注
 
-	RestockUnitPrice float64 `gorm:"not null"`                       // 进货单价（当 RestockOrderID 为 null 时，需给出进货单价）
-	RestockOrderID   *uint   `json:"stock_id"`                       // 进货订单编号(外键)，可为null
-	CustomerID       uint    `json:"customer_id" binding:"required"` // 客户编号(外键)
+	// 当 RestockOrderID 为 null 时，需给出进货单价
+	RestockUnitPrice float64 `json:"restock_unit_price" gorm:"not null"` // 进货单价
+	RestockOrderID   *uint   `json:"restock_order_id"`                   // 进货订单编号(外键)，可为null
+	CustomerID       uint    `json:"customer_id" binding:"required"`     // 客户编号(外键)
 }
 
 func (r *ComReq) Convert2SellOrder() *do.SellOrder {
