@@ -17,9 +17,7 @@ type ComRsp struct {
 	ModelNum         string              `json:"model_num"`
 	Specification    string              `json:"specification"`
 	Quantity         float64             `json:"quantity"`
-	RestockUnitPrice float64             `json:"restock_unit_price"`
 	UnitPrice        float64             `json:"unit_price"`
-	SumMoney         float64             `json:"sum_money"`
 	PaidMoney        float64             `json:"paid_money"`
 	PayDate          datetime.MyDatetime `json:"pay_date"`
 	PayMethod        string              `json:"pay_method"`
@@ -27,9 +25,9 @@ type ComRsp struct {
 	Kickback         float64             `json:"kickback"`
 	Tax              float64             `json:"tax"`
 	OtherCost        float64             `json:"other_cost"`
-	Profit           float64             `json:"profit"`
 	Note             string              `json:"note"`
-	StockID          *uint               `json:"stock_id"`
+	RestockUnitPrice float64             `json:"restock_unit_price"`
+	RestockOrderID   *uint               `json:"restock_order_id"`
 	CustomerID       uint                `json:"customer_id"`
 	CustomerName     string              `json:"customer_name"`
 }

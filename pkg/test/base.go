@@ -4,16 +4,16 @@ import (
 	"path"
 	"runtime"
 
-	"WhaMan/pkg/config"
+	"WhaMan/config"
 	"WhaMan/pkg/database"
 	"WhaMan/pkg/log"
-
-	"github.com/sirupsen/logrus"
+	"WhaMan/pkg/validate"
 )
 
 func Init() {
 	_, curFile, _, _ := runtime.Caller(0)
 	config.Init(path.Join(path.Dir(path.Dir(path.Dir(curFile))), "conf.yml"))
-	log.Init(logrus.DebugLevel)
-	database.Init()
+	log.Init("debug") // 初始化日志
+	database.Init()   // 初始化数据库
+	validate.Init()   // 初始化验证器
 }

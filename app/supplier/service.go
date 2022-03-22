@@ -27,7 +27,7 @@ func (s *Service) Create(p *dto.ComReq) (uint, error) {
 		}
 		if exist {
 			log.Logger.Info("供应商名称已存在")
-			return myErr.FieldDuplicate.AddMsg("供应商名称已存在")
+			return myErr.FieldDuplicate.SetDetail("供应商名称已存在")
 		}
 
 		// 创建
@@ -41,27 +41,50 @@ func (s *Service) Create(p *dto.ComReq) (uint, error) {
 }
 
 // Get 查找
-func (Service) Get(id uint) (*dto.ComRsp, error) {
-	data := &dto.ComRsp{}
-	if err := database.DB.Model(&do.Supplier{}).Where("id = ?", id).First(&data).Error; err != nil {
-		log.Logger.Error(err)
-		return nil, myErr.ServerErr
-	}
-	if err := database.DB.Model(&restockDO.RestockOrder{}).
-		Where("supplier_id = ?", id).
-		Order("date desc ").
-		Scan(&data.RestockOrders).Error; err != nil {
-		log.Logger.Error(err)
-		return nil, myErr.ServerErr
-	}
-	return data, nil
+func (Service) Get(id uint) (*dto.GetRsp, error) {
+	data := &dto.GetRsp{}
+	err := database.DB.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Model(&do.Supplier{}).Where("id = ?", id).First(&data).Error; err != nil {
+			log.Logger.Error(err)
+			return myErr.ServerErr
+		}
+		if err := tx.Model(&restockDO.RestockOrder{}).
+			Where("supplier_id = ?", id).
+			Order("date desc").
+			Scan(&data.RestockOrders).Error; err != nil {
+			log.Logger.Error(err)
+			return myErr.ServerErr
+		}
+		return nil
+	})
+	return data, err
 }
 
 // List 获取列表
-func (Service) List() ([]*dto.ComRsp, error) {
-	var suppliers []*dto.ComRsp
-	if err := database.DB.Model(&do.Supplier{}).
-		Order("CONVERT(name USING gbk)").Scan(&suppliers).Error; err != nil {
+func (Service) List(req *dto.ListReq) ([]*dto.ListRsp, error) {
+	// 构造子查询
+	restockOrderSubTx := database.DB.Model(&restockDO.RestockOrder{}).Select("*")
+	if req.RestockOrdersWhere != nil {
+		if req.RestockOrdersWhere.Date != nil {
+			if req.RestockOrdersWhere.Date.StartDate != "" {
+				restockOrderSubTx = restockOrderSubTx.Where("date >= ?", req.RestockOrdersWhere.Date.StartDate)
+			}
+			if req.RestockOrdersWhere.Date.EndDate != "" {
+				restockOrderSubTx = restockOrderSubTx.Where("date < ?", req.RestockOrdersWhere.Date.EndDate)
+			}
+		}
+	}
+
+	tx := database.DB.Model(&do.Supplier{}).
+		Select("suppliers.*, SUM(ro.unit_price*ro.quantity) as turnover, SUM(ro.paid_money) as paid_money ").
+		Joins("LEFT JOIN (?) ro ON suppliers.id = ro.supplier_id", restockOrderSubTx).
+		Group("suppliers.id")
+	if req.OrderBy == "" {
+		req.OrderBy = "CONVERT(name USING gbk)"
+	}
+	tx = tx.Order(req.OrderBy)
+	var suppliers []*dto.ListRsp
+	if err := tx.Scan(&suppliers).Error; err != nil {
 		log.Logger.Error(err)
 		return nil, myErr.ServerErr
 	}
@@ -86,14 +109,14 @@ func (s *Service) Update(id uint, p *dto.ComReq) error {
 			}
 			if exist {
 				log.Logger.Info("供应商名称已存在")
-				return myErr.FieldDuplicate.AddMsg("供应商名称已存在")
+				return myErr.FieldDuplicate.SetDetail("供应商名称已存在")
 			}
 		}
 
 		// 更新
 		newSupplier.ID = id
-		if err := tx.Select("*").Omit("Turnover", "CreatedAt").
-			Updates(newSupplier).Error; err != nil {
+		err := tx.Select("*").Omit("Turnover", "CreatedAt").Updates(newSupplier).Error
+		if err != nil {
 			return errors.Wrapf(err, "更新供应商信息失败：%+v", newSupplier)
 		}
 
@@ -104,19 +127,18 @@ func (s *Service) Update(id uint, p *dto.ComReq) error {
 // Delete 删除
 func (s *Service) Delete(id uint) error {
 	return database.DB.Transaction(func(tx *gorm.DB) error {
-		// 交易额不为零不能删除
-		var supplier *do.Supplier
-		if err := tx.First(&supplier, id).Error; err != nil {
-			if errors.Is(err, gorm.ErrRecordNotFound) {
-				return myErr.NotFound.AddMsg("供应商ID不存在")
-			}
+		// 存在关联的进货订单，不能删除
+		var restockOrders []restockDO.RestockOrder
+		err := tx.Model(restockDO.RestockOrder{}).Where("supplier_id = ?", id).Find(&restockOrders).Error
+		if err != nil {
 			log.Logger.Error(err)
 			return myErr.ServerErr
 		}
-		if supplier.Turnover != 0 {
-			return myErr.CannotDelete.AddMsg("交易额不为零不能删除")
+		if len(restockOrders) != 0 {
+			return myErr.CannotDelete.SetDetail("存在关联的进货订单，不能删除")
 		}
 
+		// 删除（硬删除）
 		if err := tx.Unscoped().Delete(&do.Supplier{}, id).Error; err != nil {
 			log.Logger.Error(err)
 			return myErr.ServerErr

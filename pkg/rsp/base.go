@@ -1,17 +1,10 @@
 package rsp
 
 import (
-	"fmt"
 	"net/http"
-	"time"
 
-	_const "WhaMan/const"
+	"WhaMan/consts"
 	myErr "WhaMan/pkg/error"
-)
-
-const (
-	sucCode = 200
-	sucMsg  = "成功"
 )
 
 type Response struct {
@@ -36,8 +29,8 @@ func NewWithData(data interface{}, err error) (int, *Response) {
 
 func Suc(data interface{}) (int, *Response) {
 	return http.StatusOK, &Response{
-		Code: sucCode,
-		Msg:  sucMsg,
+		Code: consts.SucCode,
+		Msg:  consts.CodeMsgMap[consts.SucCode],
 		Data: data,
 	}
 }
@@ -45,12 +38,11 @@ func Suc(data interface{}) (int, *Response) {
 func Err(e *myErr.Error) (int, *Response) {
 	return e.Code / 1000, &Response{
 		Code: e.Code,
-		Msg: fmt.Sprintf("[%s][%d] %s",
-			time.Now().Format(_const.DatetimeFormat), e.Code, e.Msg),
+		Msg:  e.Error(),
 	}
 }
 
-// ResponseExample 用于接口文档的示例（interface{}类型解析会出错）
+// ResponseExample 用于接口文档的示例（interface{}类型被swag解析会出错）
 type ResponseExample struct {
 	Code int      `json:"code"`
 	Msg  string   `json:"msg"`

@@ -71,6 +71,25 @@ func List(c *gin.Context) {
 	c.JSON(rsp.NewWithData(service.List(req)))
 }
 
+// @Summary ListGroupByModelNum
+// @Tags Restock
+// @Accept json
+// @Param data body dto.ListGroupByModelNumReq true "选项"
+// @Success 200 {object} rsp.ResponseExample "code=200"
+// @Failure 400 {object} rsp.ResponseExample "code=4xxxxx"
+// @Failure 500 {object} rsp.ResponseExample "code=5xxxxx"
+// @Router /restock/listGroupByModelNum [post]
+func ListGroupByModelNum(c *gin.Context) {
+	var req *dto.ListGroupByModelNumReq
+	if err := c.ShouldBind(&req); err != nil {
+		log.Logger.Error(err)
+		c.JSON(rsp.Err(myErr.ParamErr))
+		return
+	}
+
+	c.JSON(rsp.NewWithData(service.ListGroupByModelNum(req)))
+}
+
 // @Summary Update
 // @Tags Restock
 // @Accept json

@@ -1,35 +1,37 @@
 package error
 
+import "WhaMan/consts"
+
 var (
 	// 4XXXXX 客户端错误
 	ParamErr = &Error{
-		Code: 400001,
-		Msg:  "参数错误",
+		Code: consts.ParamErrCode,
+		Msg:  consts.CodeMsgMap[consts.ParamErrCode],
 	}
 	UsernamePasswdErr = &Error{
-		Code: 400002,
-		Msg:  "用户名或密码错误",
+		Code: consts.UsernamePasswdErrCode,
+		Msg:  consts.CodeMsgMap[consts.UsernamePasswdErrCode],
 	}
 	FieldDuplicate = &Error{
-		Code: 400003,
-		Msg:  "字段重复",
+		Code: consts.FieldDuplicateCode,
+		Msg:  consts.CodeMsgMap[consts.FieldDuplicateCode],
 	}
 	NotFound = &Error{
-		Code: 400004,
-		Msg:  "不存在",
+		Code: consts.NotFoundCode,
+		Msg:  consts.CodeMsgMap[consts.NotFoundCode],
 	}
 	CannotDelete = &Error{
-		Code: 400005,
-		Msg:  "无法删除",
+		Code: consts.CannotDeleteCode,
+		Msg:  consts.CodeMsgMap[consts.CannotDeleteCode],
 	}
 	NotLogin = &Error{
-		Code: 400006,
-		Msg:  "未登录",
+		Code: consts.NotLoginCode,
+		Msg:  consts.CodeMsgMap[consts.NotLoginCode],
 	}
 
 	// 5XXXXX 服务端错误
 	ServerErr = &Error{
-		Code: 500001,
-		Msg:  "服务端出错",
+		Code: consts.ServerErrCode,
+		Msg:  consts.CodeMsgMap[consts.ServerErrCode],
 	}
 )

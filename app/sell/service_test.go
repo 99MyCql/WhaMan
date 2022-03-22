@@ -9,7 +9,6 @@ import (
 	"WhaMan/app/restock"
 	restockDTO "WhaMan/app/restock/dto"
 	sellDTO "WhaMan/app/sell/dto"
-	"WhaMan/app/stock"
 	"WhaMan/app/supplier"
 	supplierDTO "WhaMan/app/supplier/dto"
 	"WhaMan/pkg/datetime"
@@ -28,7 +27,6 @@ func TestCreateAndGetAndUpdateAndDelete(t *testing.T) {
 	supplierService := new(supplier.Service)
 	sellService := new(Service)
 	customerService := new(customer.Service)
-	stockService := new(stock.Service)
 
 	// 创建供应商
 	supplierID, err := supplierService.Create(&supplierDTO.ComReq{
@@ -55,8 +53,6 @@ func TestCreateAndGetAndUpdateAndDelete(t *testing.T) {
 	defer func() {
 		assert.Nil(restockService.Delete(restockOrderID))
 	}()
-	restockOrder, err := restockService.Get(restockOrderID)
-	assert.Nil(err)
 
 	// 创建客户A、B
 	customerAID, err := customerService.Create(&customerDTO.ComReq{
@@ -80,71 +76,36 @@ func TestCreateAndGetAndUpdateAndDelete(t *testing.T) {
 			Time:  time.Now(),
 			Valid: true,
 		},
-		CustomerOrderID:  "123",
-		ModelNum:         "PC",
-		Quantity:         50,
-		RestockUnitPrice: restockOrder.UnitPrice,
-		UnitPrice:        13,
-		StockID:          &restockOrder.StockID,
-		CustomerID:       customerAID,
+		CustomerOrderID: "123",
+		ModelNum:        "PC",
+		Quantity:        50,
+		UnitPrice:       13,
+		RestockOrderID:  &restockOrderID,
+		CustomerID:      customerAID,
 	}
 	sellOrderID, err := sellService.Create(req)
 	assert.Nil(err)
 	defer func() {
-		sellService.Delete(sellOrderID) // 下文会进行删除，此处不检查是否返回 nil
+		assert.Nil(sellService.Delete(sellOrderID))
 	}()
 
 	// 验证创建是否成功
 	sellOrder, err := sellService.Get(sellOrderID)
 	assert.Nil(err)
 	assert.Equal("PC", sellOrder.ModelNum)
-	assert.Equal(float64(50), sellOrder.Quantity)
-
-	// 验证库存是否更新
-	_stock, err := stockService.Get(restockOrder.StockID)
-	assert.Nil(err)
-	assert.Equal(float64(50), _stock.CurQuantity)
-
-	// 验证客户交易额是否更新
-	_customer, err := customerService.Get(customerAID)
-	assert.Nil(err)
-	assert.Equal(float64(650), _customer.Turnover)
+	assert.Equal(req.Quantity, sellOrder.Quantity)
 
 	// 验证更新
-	req.UnitPrice = 12
+	req.UnitPrice = 12           // 更新单价
+	req.RestockOrderID = nil     // 更新库存
+	req.CustomerID = customerBID // 更新客户
 	assert.Nil(sellService.Update(sellOrderID, req))
 	sellOrder, err = sellService.Get(sellOrderID)
 	assert.Nil(err)
+	t.Logf("%+v", sellOrder)
 	assert.Equal(float64(12), sellOrder.UnitPrice)
-
-	// 更新库存
-	req.StockID = nil
-	assert.Nil(sellService.Update(sellOrderID, req))
-	sellOrder, err = sellService.Get(sellOrderID)
-	assert.Nil(err)
-	assert.Nil(sellOrder.StockID)
-	_stock, err = stockService.Get(restockOrder.StockID)
-	assert.Nil(err)
-	assert.Equal(float64(100), _stock.CurQuantity)
-
-	// 更新客户
-	req.CustomerID = customerBID
-	assert.Nil(sellService.Update(sellOrderID, req))
-	sellOrder, err = sellService.Get(sellOrderID)
-	assert.Nil(err)
+	assert.Nil(sellOrder.RestockOrderID)
 	assert.Equal(customerBID, sellOrder.CustomerID)
-	_customer, err = customerService.Get(customerAID)
-	assert.Nil(err)
-	assert.Equal(float64(0), _customer.Turnover)
-	_customer, err = customerService.Get(customerBID)
-	assert.Nil(err)
-	assert.Equal(float64(12*50), _customer.Turnover)
-
-	// 验证删除
-	assert.Nil(sellService.Delete(sellOrderID))
-	_customer, err = customerService.Get(customerBID)
-	assert.Nil(err)
-	assert.Equal(float64(0), _customer.Turnover)
 }
 
 func TestList(t *testing.T) {

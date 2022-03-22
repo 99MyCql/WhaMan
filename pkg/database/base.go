@@ -1,6 +1,7 @@
 package database
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"time"
@@ -8,9 +9,8 @@ import (
 	customerDO "WhaMan/app/customer/do"
 	restockDO "WhaMan/app/restock/do"
 	sellDO "WhaMan/app/sell/do"
-	stockDO "WhaMan/app/stock/do"
 	supplierDO "WhaMan/app/supplier/do"
-	"WhaMan/pkg/config"
+	"WhaMan/config"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -23,8 +23,12 @@ var DB *gorm.DB
 // Init 初始化数据库连接
 func Init() {
 	// 创建数据库连接池
+	url := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8&parseTime=True&loc=Local",
+		config.Conf.Mysql.Username, config.Conf.Mysql.Password, config.Conf.Mysql.Host,
+		config.Conf.Mysql.Port, config.Conf.Mysql.Database)
+	fmt.Println(url)
 	var err error
-	DB, err = gorm.Open(mysql.Open(config.Conf.MysqlUrl), &gorm.Config{
+	DB, err = gorm.Open(mysql.Open(url), &gorm.Config{
 		Logger: logger.New(
 			log.New(os.Stdout, "[WhaMan-DB] ", log.LstdFlags),
 			logger.Config{
@@ -43,7 +47,7 @@ func Init() {
 	// 如果大小、精度、是否为空可以更改，则 AutoMigrate 会改变列的类型。
 	// 出于保护您数据的目的，它不会删除未使用的列
 	err = DB.Set("gorm:table_options", "ENGINE=InnoDB  DEFAULT CHARSET=utf8").
-		AutoMigrate(&customerDO.Customer{}, &stockDO.Stock{}, &supplierDO.Supplier{},
+		AutoMigrate(&customerDO.Customer{}, &supplierDO.Supplier{},
 			&restockDO.RestockOrder{}, &sellDO.SellOrder{})
 	if err != nil {
 		panic(err)

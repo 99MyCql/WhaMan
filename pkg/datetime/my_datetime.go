@@ -6,13 +6,7 @@ import (
 	"strings"
 	"time"
 
-	_const "WhaMan/const"
-)
-
-const (
-	location       = "Asia/Shanghai"
-	dateFormat     = _const.DateFormat
-	datetimeFormat = _const.DatetimeFormat
+	"WhaMan/consts"
 )
 
 // MyDatetime 自定义时间格式，用于json序列化与非序列化、MySQL读写
@@ -35,11 +29,11 @@ func (t *MyDatetime) UnmarshalJSON(data []byte) error {
 	// 按指定格式解析时间
 	var err error
 	dataStr = strings.Trim(dataStr, "\"") // 去除首位双引号
-	local, _ := time.LoadLocation(location)
-	if len(dataStr) == len(dateFormat) {
-		t.Time, err = time.ParseInLocation(dateFormat, dataStr, local)
+	local, _ := time.LoadLocation(consts.Location)
+	if len(dataStr) == len(consts.DateFormat) {
+		t.Time, err = time.ParseInLocation(consts.DateFormat, dataStr, local)
 	} else {
-		t.Time, err = time.ParseInLocation(datetimeFormat, dataStr, local)
+		t.Time, err = time.ParseInLocation(consts.DatetimeFormat, dataStr, local)
 	}
 	if err != nil {
 		return err
@@ -53,7 +47,7 @@ func (t *MyDatetime) MarshalJSON() ([]byte, error) {
 	if !t.Valid {
 		return []byte("\"\""), nil
 	}
-	return []byte(fmt.Sprintf("\"%s\"", t.Time.Format(datetimeFormat))), nil
+	return []byte(fmt.Sprintf("\"%s\"", t.Time.Format(consts.DatetimeFormat))), nil
 }
 
 // Value 写入 mysql 时调用
@@ -79,5 +73,5 @@ func (t *MyDatetime) Scan(v interface{}) error {
 
 // 用于 fmt.Println 和后续验证场景
 func (t *MyDatetime) String() string {
-	return t.Time.Format(datetimeFormat)
+	return t.Time.Format(consts.DatetimeFormat)
 }

@@ -12,9 +12,9 @@
 *.out
 
 .idea/
-conf.yml
 *.log
 docs/
 temp/*
 !.gitkeep
 *.pem
+*_linux

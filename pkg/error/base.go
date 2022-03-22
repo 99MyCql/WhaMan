@@ -5,15 +5,19 @@ import (
 )
 
 type Error struct {
-	Code int
-	Msg  string
+	Code   int
+	Msg    string
+	Detail string
 }
 
 func (e *Error) Error() string {
-	return fmt.Sprintf("[%d] %s", e.Code, e.Msg)
+	if e.Detail == "" {
+		return fmt.Sprintf("[%d] %s", e.Code, e.Msg)
+	}
+	return fmt.Sprintf("[%d] %s:%s", e.Code, e.Msg, e.Detail)
 }
 
-func (e *Error) AddMsg(msg string) *Error {
-	e.Msg += " - " + msg
+func (e *Error) SetDetail(detail string) *Error {
+	e.Detail = detail
 	return e
 }
