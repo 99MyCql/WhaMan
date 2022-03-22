@@ -185,7 +185,7 @@ func (s *Service) Delete(id uint) error {
 			return myErr.ServerErr
 		}
 		if len(sellOrders) != 0 {
-			return myErr.CannotDelete.AddMsg("存在关联的出货订单，不能删除")
+			return myErr.CannotDelete.SetDetail("存在关联的出货订单，不能删除")
 		}
 		// 删除进货订单（软删除）
 		if err := tx.Delete(&do.RestockOrder{}, id).Error; err != nil {

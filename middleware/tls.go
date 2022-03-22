@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"WhaMan/pkg/config"
+	"WhaMan/config"
 
 	"github.com/gin-gonic/gin"
 	"github.com/unrolled/secure"

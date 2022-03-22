@@ -12,7 +12,6 @@
 *.out
 
 .idea/
-conf.yml
 *.log
 docs/
 temp/*

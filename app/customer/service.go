@@ -27,7 +27,7 @@ func (s *Service) Create(req *dto.ComReq) (uint, error) {
 		}
 		if exist {
 			log.Logger.Info("客户名称已存在")
-			return myErr.FieldDuplicate.AddMsg("客户名称已存在")
+			return myErr.FieldDuplicate.SetDetail("客户名称已存在")
 		}
 
 		// 创建客户
@@ -110,7 +110,7 @@ func (s *Service) Update(id uint, req *dto.ComReq) error {
 			}
 			if exist {
 				log.Logger.Info("客户名称已存在")
-				return myErr.FieldDuplicate.AddMsg("客户名称已存在")
+				return myErr.FieldDuplicate.SetDetail("客户名称已存在")
 			}
 		}
 
@@ -136,7 +136,7 @@ func (Service) Delete(id uint) error {
 			return myErr.ServerErr
 		}
 		if len(sellOrders) != 0 {
-			return myErr.CannotDelete.AddMsg("存在关联的出货订单，不能删除")
+			return myErr.CannotDelete.SetDetail("存在关联的出货订单，不能删除")
 		}
 
 		// 删除

@@ -1,0 +1,41 @@
+# 项目名
+project_name: WhaMan
+
+# 运行环境
+#   dev   : 开发环境
+#   prod  : 生产环境
+env: dev
+
+# IP和端口
+host: 0.0.0.0
+port: 8080
+
+# MySQL数据库配置
+mysql:
+  host: localhost
+  port: 3306
+  username: xxxxxx
+  password: xxxxxx
+  database: WhaMan
+
+# 日志等级
+#   panic
+#   fatal
+#   error
+#   warn
+#   info
+#   debug
+#   trace
+log_level: debug
+
+# session加密密钥
+session_secret: xxxxxx
+
+# 登录用户名和密码（目前只支持单用户）
+username: xxxxxx
+password: xxxxxx
+
+# SSL证书和私钥路径
+ssl:
+  cert: xxx/xxx
+  key: xxx/xxx

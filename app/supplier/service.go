@@ -27,7 +27,7 @@ func (s *Service) Create(p *dto.ComReq) (uint, error) {
 		}
 		if exist {
 			log.Logger.Info("供应商名称已存在")
-			return myErr.FieldDuplicate.AddMsg("供应商名称已存在")
+			return myErr.FieldDuplicate.SetDetail("供应商名称已存在")
 		}
 
 		// 创建
@@ -109,7 +109,7 @@ func (s *Service) Update(id uint, p *dto.ComReq) error {
 			}
 			if exist {
 				log.Logger.Info("供应商名称已存在")
-				return myErr.FieldDuplicate.AddMsg("供应商名称已存在")
+				return myErr.FieldDuplicate.SetDetail("供应商名称已存在")
 			}
 		}
 
@@ -135,7 +135,7 @@ func (s *Service) Delete(id uint) error {
 			return myErr.ServerErr
 		}
 		if len(restockOrders) != 0 {
-			return myErr.CannotDelete.AddMsg("存在关联的进货订单，不能删除")
+			return myErr.CannotDelete.SetDetail("存在关联的进货订单，不能删除")
 		}
 
 		// 删除（硬删除）

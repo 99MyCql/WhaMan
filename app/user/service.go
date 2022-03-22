@@ -2,7 +2,7 @@ package user
 
 import (
 	"WhaMan/app/user/dto"
-	"WhaMan/pkg/config"
+	"WhaMan/config"
 	myErr "WhaMan/pkg/error"
 	"WhaMan/pkg/log"
 

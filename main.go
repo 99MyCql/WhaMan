@@ -6,36 +6,25 @@ import (
 	sellController "WhaMan/app/sell"
 	"WhaMan/app/supplier"
 	"WhaMan/app/user"
+	"WhaMan/config"
 	_ "WhaMan/docs"
 	"WhaMan/middleware"
-	"WhaMan/pkg/config"
 	"WhaMan/pkg/database"
-	"WhaMan/pkg/datetime"
 	"WhaMan/pkg/log"
 	"WhaMan/pkg/validate"
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
-	"github.com/gin-gonic/gin/binding"
-	"github.com/go-playground/validator/v10"
-	"github.com/sirupsen/logrus"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"github.com/swaggo/gin-swagger/swaggerFiles"
 )
 
 func main() {
-	config.Init("conf.yml")     // 初始化配置
-	log.Init(logrus.DebugLevel) // 初始化日志
-	database.Init()             // 初始化数据库
-
-	// 注册验证器
-	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
-		if err := v.RegisterValidation("datetime", validate.DatetimeFormat); err != nil {
-			log.Logger.Fatal(err)
-		}
-		v.RegisterCustomTypeFunc(validate.MyDatetimeValidate, datetime.MyDatetime{})
-	}
+	config.Init("conf.yml")        // 初始化配置
+	log.Init(config.Conf.LogLevel) // 初始化日志
+	database.Init()                // 初始化数据库
+	validate.Init()                // 初始化验证器
 
 	r := gin.Default()
 
@@ -50,7 +39,7 @@ func main() {
 
 	/*** 配置路由 ***/
 	// debug模式下注册 swagger 路由
-	if config.Conf.Env == "debug" {
+	if config.Conf.Env == "dev" {
 		r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	}
 	// 业务路由
@@ -96,5 +85,5 @@ func main() {
 		supplierRouter.GET("/delete/:id", supplier.Delete)
 	}
 
-	r.RunTLS(config.Conf.Host+":"+config.Conf.Port, config.Conf.SslCert, config.Conf.SslKey)
+	r.RunTLS(config.Conf.Host+":"+config.Conf.Port, config.Conf.Ssl.Cert, config.Conf.Ssl.Key)
 }

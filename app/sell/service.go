@@ -67,8 +67,9 @@ func (Service) List(req *dto.ListReq) ([]*dto.ComRsp, error) {
 		}
 	}
 	if req.OrderBy != "" {
-		tx = tx.Order(req.OrderBy)
+		req.OrderBy = "date desc"
 	}
+	tx = tx.Order(req.OrderBy)
 
 	var data []*dto.ComRsp
 	if err := tx.Scan(&data).Error; err != nil {
